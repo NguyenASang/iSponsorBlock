@@ -1,5 +1,6 @@
 #import "Headers/SponsorSegmentView.h"
 #import "Headers/Localization.h"
+#import "Headers/ColorFunctions.h"
 
 @implementation SponsorSegmentView
 - (instancetype)initWithFrame:(CGRect)frame sponsorSegment:(SponsorSegment *)segment editable:(BOOL)editable {
@@ -30,6 +31,7 @@
         self.categoryLabel = [[UILabel alloc] initWithFrame:self.frame];
         self.segmentLabel = [[UILabel alloc] initWithFrame:self.frame];
         self.categoryLabel.text = category;
+        self.categoryLabel.textColor = [UIColor whiteColor];
         
         NSInteger startSeconds = lroundf(segment.startTime);
         NSInteger startHours = startSeconds / 3600;
@@ -56,6 +58,7 @@
         }
         
         self.segmentLabel.text = [NSString stringWithFormat:@"%@ %@ %@ %@", LOC(@"From"), startTime, LOC(@"to"), endTime];
+        self.segmentLabel.textColor = [UIColor whiteColor];
         
         [self addSubview:self.categoryLabel];
         self.categoryLabel.adjustsFontSizeToFitWidth = YES;
@@ -75,8 +78,9 @@
         [self.categoryLabel.widthAnchor constraintEqualToAnchor:self.widthAnchor].active = YES;
         [self.categoryLabel.heightAnchor constraintEqualToConstant:self.frame.size.height/2].active = YES;
         [self.categoryLabel.topAnchor constraintEqualToAnchor:self.segmentLabel.bottomAnchor].active = YES;
-        
-        self.backgroundColor = UIColor.systemGray4Color;
+        NSString *test = hexFromUIColor(UIColor.blackColor);
+        self.backgroundColor = colorWithHexString(test);
+        self.backgroundColor = colorWithHexString(@"#3A3A3C"); //UIColor.systemGray4Color;
         self.layer.cornerRadius = 10;
         self.segmentLabel.layer.cornerRadius = 10;
         self.categoryLabel.layer.cornerRadius = 10;

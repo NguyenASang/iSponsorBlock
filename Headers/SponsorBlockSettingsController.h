@@ -1,10 +1,14 @@
 #import <UIKit/UIKit.h>
 #import <objc/runtime.h>
 #import <rootless.h>
-#import "ColorFunctions.h"
+#import "TOInsetGroupedTableView.h"
 
 @protocol HBColorPickerDelegate <NSObject>
 @optional -(void)colorPicker:(id)colorPicker didSelectColor:(UIColor *)color;
+@end
+
+@interface UITableViewCell ()
+- (void)_setSeparatorEffect:(id)arg1;
 @end
 
 @interface UIView ()
@@ -41,8 +45,9 @@
 @end
 
 @interface SponsorBlockSettingsController : UIViewController <UITableViewDelegate, UITableViewDataSource, UITextFieldDelegate>
+@property (nonatomic, assign) BOOL toggleDarkMode;
 @property (nonatomic, strong) NSString *tweakTitle;
-@property (strong, nonatomic) UITableView *tableView;
+@property (strong, nonatomic) TOInsetGroupedTableView *tableView;
 @property (strong, nonatomic) NSArray *sectionTitles;
 @property (strong, nonatomic) NSMutableDictionary *settings;
 @property (strong, nonatomic) NSString *settingsPath;

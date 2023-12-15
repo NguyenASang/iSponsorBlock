@@ -5,7 +5,7 @@
 
 - (void)viewDidLoad {
     [super viewDidLoad];
-    self.view.backgroundColor = [UIColor systemBackgroundColor];
+    self.view.backgroundColor = [UIColor blackColor]; //[UIColor systemBackgroundColor];
     [self addChildViewController:self.playerViewController];
     [self.view addSubview:self.playerViewController.view];
     [self setupViews];
@@ -44,6 +44,7 @@
     
     self.whitelistChannelLabel = [[UILabel alloc] initWithFrame:CGRectZero];
     self.whitelistChannelLabel.text = LOC(@"WhitelistChannel");
+    self.whitelistChannelLabel.textColor = [UIColor whiteColor];
     [self.playerViewController.view addSubview:self.whitelistChannelLabel];
     self.whitelistChannelLabel.translatesAutoresizingMaskIntoConstraints = NO;
     [self.whitelistChannelLabel.topAnchor constraintEqualToAnchor:self.startEndSegmentButton.bottomAnchor constant:10].active = YES;
@@ -74,6 +75,7 @@
         self.segmentsInDatabaseLabel.userInteractionEnabled = YES;
         
         self.segmentsInDatabaseLabel.text = LOC(@"SegmentsInDatabase");
+        self.segmentsInDatabaseLabel.textColor = [UIColor whiteColor];
         self.segmentsInDatabaseLabel.numberOfLines = 1;
         self.segmentsInDatabaseLabel.adjustsFontSizeToFitWidth = YES;
         self.segmentsInDatabaseLabel.textAlignment = NSTextAlignmentCenter;
@@ -97,7 +99,7 @@
         
         for (int i = 0; i < self.sponsorSegmentViews.count; i++) {
             [self.segmentsInDatabaseLabel addSubview:self.sponsorSegmentViews[i]];
-            [self.sponsorSegmentViews[i] addInteraction:[[UIContextMenuInteraction alloc] initWithDelegate:self]];
+            //[self.sponsorSegmentViews[i] addInteraction:[[UIContextMenuInteraction alloc] initWithDelegate:self]];
             
             self.sponsorSegmentViews[i].translatesAutoresizingMaskIntoConstraints = NO;
             [self.sponsorSegmentViews[i].widthAnchor constraintEqualToConstant:playerView.frame.size.width/self.sponsorSegmentViews.count-10].active = YES;
@@ -110,10 +112,9 @@
             }
             
             if (i > 0) {
-                [self.sponsorSegmentViews[i].leftAnchor constraintEqualToAnchor:self.sponsorSegmentViews[i-1].rightAnchor constant:5].active = YES;
-            }
-            else {
-                [self.sponsorSegmentViews[i].leftAnchor constraintEqualToAnchor:self.segmentsInDatabaseLabel.leftAnchor constant:5*(self.sponsorSegmentViews.count / 2)].active = YES;
+                [self.sponsorSegmentViews[i].leftAnchor constraintEqualToAnchor:self.sponsorSegmentViews[i - 1].rightAnchor constant:5].active = YES;
+            } else {
+                [self.sponsorSegmentViews[i].leftAnchor constraintEqualToAnchor:self.segmentsInDatabaseLabel.leftAnchor constant:5 * (self.sponsorSegmentViews.count / 2)].active = YES;
             }
         }
 
@@ -124,11 +125,12 @@
         self.userSegmentsLabel.userInteractionEnabled = YES;
         
         self.userSegmentsLabel.text = LOC(@"YourSegments");
+        self.userSegmentsLabel.textColor = [UIColor whiteColor];
         
         self.userSponsorSegmentViews = [self segmentViewsForSegments:self.playerViewController.userSkipSegments editable:YES];
         for (int i = 0; i < self.userSponsorSegmentViews.count; i++) {
             [self.userSegmentsLabel addSubview:self.userSponsorSegmentViews[i]];
-            [self.userSponsorSegmentViews[i] addInteraction:[[UIContextMenuInteraction alloc] initWithDelegate:self]];
+            //[self.userSponsorSegmentViews[i] addInteraction:[[UIContextMenuInteraction alloc] initWithDelegate:self]];
             
             self.userSponsorSegmentViews[i].translatesAutoresizingMaskIntoConstraints = NO;
             [self.userSponsorSegmentViews[i].widthAnchor constraintEqualToConstant:playerView.frame.size.width/self.userSponsorSegmentViews.count-10].active = YES;
@@ -141,10 +143,9 @@
             }
             
             if (i > 0) {
-                [self.userSponsorSegmentViews[i].leftAnchor constraintEqualToAnchor:self.userSponsorSegmentViews[i-1].rightAnchor constant:5].active = YES;
-            }
-            else {
-                [self.userSponsorSegmentViews[i].leftAnchor constraintEqualToAnchor:self.userSegmentsLabel.leftAnchor constant:5*(self.userSponsorSegmentViews.count / 2)].active = YES;
+                [self.userSponsorSegmentViews[i].leftAnchor constraintEqualToAnchor:self.userSponsorSegmentViews[i - 1].rightAnchor constant:5].active = YES;
+            } else {
+                [self.userSponsorSegmentViews[i].leftAnchor constraintEqualToAnchor:self.userSegmentsLabel.leftAnchor constant:5 * (self.userSponsorSegmentViews.count / 2)].active = YES;
             }
         }
         self.userSegmentsLabel.numberOfLines = 2;
@@ -169,7 +170,7 @@
         
         [playerView addSubview:self.submitSegmentsButton];
         self.submitSegmentsButton.layer.cornerRadius = 12;
-        self.submitSegmentsButton.frame = CGRectMake(0,0,512,50);
+        self.submitSegmentsButton.frame = CGRectMake(0,0, 512, 50);
         
         self.submitSegmentsButton.translatesAutoresizingMaskIntoConstraints = NO;
         [self.submitSegmentsButton.topAnchor constraintEqualToAnchor:self.userSegmentsLabel.bottomAnchor constant:15].active = YES;
@@ -183,8 +184,7 @@
 - (void)whitelistSwitchToggled:(UISwitch *)sender {
     if (sender.isOn) {
         [kWhitelistedChannels addObject:self.playerViewController.channelID];
-    }
-    else {
+    } else {
         [kWhitelistedChannels removeObject:self.playerViewController.channelID];
     }
     NSArray *paths = NSSearchPathForDirectoriesInDomains(NSDocumentDirectory, NSUserDomainMask, YES);
@@ -212,7 +212,7 @@
     self.overlayView.isDisplayingSponsorBlockViewController = NO;
     self.overlayView.sponsorBlockButton.hidden = NO;
     self.overlayView.sponsorStartedEndedButton.hidden = NO;
-    [self.overlayView setOverlayVisible:YES];
+    //[self.overlayView setOverlayVisible:YES];
 }
 
 - (void)startEndSegmentButtonPressed:(UIButton *)sender {
@@ -220,8 +220,8 @@
     NSString *segmentEndsNowTitle = LOC(@"SegmentEndsNow");
     NSString *errorTitle = LOC(@"Error");
     NSString *okTitle = LOC(@"OK");
-    NSInteger minutes = lroundf(self.playerViewController.userSkipSegments.lastObject.startTime)/60;
-    NSInteger seconds = lroundf(self.playerViewController.userSkipSegments.lastObject.startTime)%60;
+    NSInteger minutes = lroundf(self.playerViewController.userSkipSegments.lastObject.startTime) / 60;
+    NSInteger seconds = lroundf(self.playerViewController.userSkipSegments.lastObject.startTime) % 60;
     NSString *errorMessage = [NSString stringWithFormat:@"%@ %ld:%02ld", LOC(@"EndTimeLessThanStartTime"), minutes, seconds];
 
     if ([sender.titleLabel.text isEqualToString:segmentStartsNowTitle]) {
@@ -231,7 +231,7 @@
         self.playerViewController.userSkipSegments.lastObject.endTime = self.playerViewController.currentVideoMediaTime;
         if (self.playerViewController.userSkipSegments.lastObject.endTime != self.playerViewController.currentVideoMediaTime) {
             UIAlertController *alert = [UIAlertController alertControllerWithTitle:errorTitle message:errorMessage preferredStyle:UIAlertControllerStyleAlert];
-            UIAlertAction* defaultAction = [UIAlertAction actionWithTitle:okTitle style:UIAlertActionStyleDefault handler:^(UIAlertAction * action) {}];
+            UIAlertAction *defaultAction = [UIAlertAction actionWithTitle:okTitle style:UIAlertActionStyleDefault handler:^(UIAlertAction *action) {}];
             [alert addAction:defaultAction];
             [self presentViewController:alert animated:YES completion:nil];
             return;
@@ -266,19 +266,17 @@
 - (NSMutableArray *)segmentViewsForSegments:(NSArray <SponsorSegment *> *)segments editable:(BOOL)editable {
     for (SponsorSegment *segment in segments) {
         if (!editable) {
-            [self.sponsorSegmentViews addObject:[[SponsorSegmentView alloc] initWithFrame:CGRectMake(0,0,50,30) sponsorSegment:segment editable:editable]];
-        }
-        else {
-            [self.userSponsorSegmentViews addObject:[[SponsorSegmentView alloc] initWithFrame:CGRectMake(0,0,50,30) sponsorSegment:segment editable:editable]];
+            [self.sponsorSegmentViews addObject:[[SponsorSegmentView alloc] initWithFrame:CGRectMake(0, 0, 50, 30) sponsorSegment:segment editable:editable]];
+        } else {
+            [self.userSponsorSegmentViews addObject:[[SponsorSegmentView alloc] initWithFrame:CGRectMake(0, 0, 50, 30) sponsorSegment:segment editable:editable]];
         }
     }
     if (!editable) return self.sponsorSegmentViews;
     return self.userSponsorSegmentViews;
 }
-
-
-- (UIContextMenuConfiguration *)contextMenuInteraction:(UIContextMenuInteraction *)interaction
-                        configurationForMenuAtLocation:(CGPoint)location {
+// Using UIInteraction
+/*
+- (UIContextMenuConfiguration *)contextMenuInteraction:(UIContextMenuInteraction *)interaction configurationForMenuAtLocation:(CGPoint)location {
     SponsorSegmentView *sponsorSegmentView = interaction.view;
 
     NSArray *paths = NSSearchPathForDirectoriesInDomains(NSDocumentDirectory, NSUserDomainMask, YES);
@@ -423,5 +421,5 @@
         }
     }];
     return config;
-}
+}*/
 @end

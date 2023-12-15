@@ -2,7 +2,7 @@
 #import "SponsorSegmentView.h"
 #import "iSponsorBlock.h"
 
-@interface SponsorBlockViewController : UIViewController <UIContextMenuInteractionDelegate>
+@interface SponsorBlockViewController : UIViewController //<UIContextMenuInteractionDelegate>
 @property (strong, nonatomic) YTPlayerViewController *playerViewController;
 @property (strong, nonatomic) UIViewController *previousParentViewController;
 @property (strong, nonatomic) YTMainAppControlsOverlayView *overlayView;

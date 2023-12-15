@@ -82,11 +82,11 @@ static const CGFloat MBDefaultDetailsLabelFontSize = 12.f;
     _margin = 20.0f;
     _defaultMotionEffectsEnabled = NO;
 
-    if (@available(iOS 13.0, tvOS 13, *)) {
+    /*if (@available(iOS 13.0, tvOS 13, *)) {
        _contentColor = [[UIColor labelColor] colorWithAlphaComponent:0.7f];
-    } else {
+    } else {*/
         _contentColor = [UIColor colorWithWhite:0.f alpha:0.7f];
-    }
+    //}
 
     // Transparent background
     self.opaque = NO;
@@ -372,14 +372,14 @@ static const CGFloat MBDefaultDetailsLabelFontSize = 12.f;
             UIActivityIndicatorView *activityIndicator;
             [indicator removeFromSuperview];
 #if !TARGET_OS_MACCATALYST
-            if (@available(iOS 13.0, tvOS 13.0, *)) {
+            /*if (@available(iOS 13.0, tvOS 13.0, *)) {
 #endif
                 activityIndicator = [[UIActivityIndicatorView alloc] initWithActivityIndicatorStyle:UIActivityIndicatorViewStyleLarge];
                 activityIndicator.color = [UIColor whiteColor];
 #if !TARGET_OS_MACCATALYST
-            } else {
+            } else {*/
                activityIndicator = [[UIActivityIndicatorView alloc] initWithActivityIndicatorStyle:UIActivityIndicatorViewStyleWhiteLarge];
-            }
+            //}
 #endif
             [activityIndicator startAnimating];
             indicator = activityIndicator;
@@ -1065,17 +1065,17 @@ static const CGFloat MBDefaultDetailsLabelFontSize = 12.f;
 - (instancetype)initWithFrame:(CGRect)frame {
     if ((self = [super initWithFrame:frame])) {
         _style = MBProgressHUDBackgroundStyleBlur;
-        if (@available(iOS 13.0, *)) {
+        /*if (@available(iOS 13.0, *)) {
             #if TARGET_OS_TV
             _blurEffectStyle = UIBlurEffectStyleRegular;
             #else
             _blurEffectStyle = UIBlurEffectStyleSystemThickMaterial;
             #endif
             // Leaving the color unassigned yields best results.
-        } else {
+        } else {*/
             _blurEffectStyle = UIBlurEffectStyleLight;
             _color = [UIColor colorWithWhite:0.8f alpha:0.6f];
-        }
+        //}
 
         self.clipsToBounds = YES;
 
