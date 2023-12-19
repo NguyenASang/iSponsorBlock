@@ -1,7 +1,8 @@
 #import <Foundation/Foundation.h>
 #import <UIKit/UIKit.h>
+
 //https://stackoverflow.com/a/26341062
-static NSString *hexFromUIColor(UIColor *color) {
+static inline NSString *hexFromUIColor(UIColor *color) {
     const CGFloat *components = CGColorGetComponents(color.CGColor);
 
     CGFloat r = components[0];
@@ -14,7 +15,7 @@ static NSString *hexFromUIColor(UIColor *color) {
             lroundf(b * 255)];
 }
 
-static CGFloat colorComponentFrom(NSString *string, NSUInteger start, NSUInteger length) {
+static inline CGFloat colorComponentFrom(NSString *string, NSUInteger start, NSUInteger length) {
     NSString *substring = [string substringWithRange: NSMakeRange(start, length)];
     NSString *fullHex = length == 2 ? substring : [NSString stringWithFormat: @"%@%@", substring, substring];
     unsigned hexComponent;
@@ -22,7 +23,7 @@ static CGFloat colorComponentFrom(NSString *string, NSUInteger start, NSUInteger
     return hexComponent / 255.0;
 }
 
-static UIColor *colorWithHexString(NSString *hexString) {
+static inline UIColor *colorWithHexString(NSString *hexString) {
     NSString *colorString = [[hexString stringByReplacingOccurrencesOfString: @"#" withString: @""] uppercaseString];
 
     CGFloat alpha, red, blue, green;

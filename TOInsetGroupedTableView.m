@@ -19,39 +19,17 @@
 //  AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY,
 //  WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR
 //  IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
+//
+//  This is a modified version by NguyenASang that only supports iOS 12
 
+#import "Headers/ColorFunctions.h"
 #import "Headers/TOInsetGroupedTableView.h"
-#import "Headers/SponsorBlockSettingsController.h"
-
-static CGFloat colorComponentFrom(NSString *string, NSUInteger start, NSUInteger length) {
-    NSString *substring = [string substringWithRange: NSMakeRange(start, length)];
-    NSString *fullHex = length == 2 ? substring : [NSString stringWithFormat: @"%@%@", substring, substring];
-    unsigned hexComponent;
-    [[NSScanner scannerWithString: fullHex] scanHexInt: &hexComponent];
-    return hexComponent / 255.0;
-}
-
-static UIColor *colorWithHexString(NSString *hexString) {
-    NSString *colorString = [[hexString stringByReplacingOccurrencesOfString: @"#" withString: @""] uppercaseString];
-
-    CGFloat alpha, red, blue, green;
-
-    // #RGB
-    alpha = 1.0f;
-    red   = colorComponentFrom(colorString,0,2);
-    green = colorComponentFrom(colorString,2,2);
-    blue  = colorComponentFrom(colorString,4,2);
-
-    return [UIColor colorWithRed: red green: green blue: blue alpha: alpha];
-}
-
-// Un-comment when testing this on iOS 13 and up
-// #define DEBUG_TOINSETGROUPEDTABLEVIEW 1
 
 /**
  The KVO key we'll be using to detect when the table view
  manipulates the shape of any of the subviews
 */
+
 static NSString * const kTOInsetGroupedTableViewFrameKey = @"frame";
 
 /**
@@ -66,62 +44,17 @@ static NSString * const kTOInsetGroupedTableViewSelectedKey = @"selected";
 static CGFloat const kTOInsetGroupedTableViewCornerRadius = 10.0f;
 
 @interface TOInsetGroupedTableView ()
-
-/**
- A set to store a reference to each view that we attached
- a KVO observer to.
- */
 @property (nonatomic, strong) NSMutableSet *observedViews;
-
 @property (nonatomic, assign) int realSeparatorStyle;
-
 @end
 
 @implementation TOInsetGroupedTableView
 
 #pragma mark - View Life-cycle -
 
-- (instancetype)init {
-    // Set a non-zero default frame value
-    CGRect frame = (CGRect){{0, 0}, {320, 480}};
-
-    // On iOS 12 and below, force the grouped style, and perform common setup
-    if (self = [super initWithFrame:frame style:UITableViewStyleGrouped]) {
-        [self commonInit];
-    }
-
-    return self;
-}
-
 - (instancetype)initWithFrame:(CGRect)frame {
     // On iOS 12 and below, make sure we explicitly force the grouped style
     if (self = [super initWithFrame:frame style:UITableViewStyleGrouped]) {
-        [self commonInit];
-    }
-
-    return self;
-}
-
-- (instancetype)initWithFrame:(CGRect)frame style:(UITableViewStyle)style {
-    // On iOS 12 and below, make sure we explicitly force the grouped style
-    if (self = [super initWithFrame:frame style:UITableViewStyleGrouped]) {
-        [self commonInit];
-    }
-
-    return self;
-}
-
-- (instancetype)initWithCoder:(NSCoder *)coder {
-    if (self = [super initWithCoder:coder]) {
-        // If the user left the style as "Plain" in IB, since we can't
-        // override it here, throw an exception.
-        // (Thankfully on iOS 12, IB will gracefully default it back to "Grouped")
-        if (self.style < UITableViewStyleGrouped) {
-            NSString *reason = @"TOInsetGroupedTableView: Make sure the table view style is set to \"Inset Grouped\" in Interface Builder";
-            @throw [NSException exceptionWithName:NSInternalInconsistencyException reason:reason userInfo:nil];
-        }
-
-        // On iOS 12 or lower, perform the common set-up
         [self commonInit];
     }
 
@@ -149,9 +82,7 @@ static CGFloat const kTOInsetGroupedTableViewCornerRadius = 10.0f;
     self.backgroundColor = self.toggleDarkMode ? [UIColor blackColor] : colorWithHexString(@"EFEFF4");
 
     // If it's not a section header/footer view, or a table cell, ignore it
-    if (![subview isKindOfClass:[UITableViewHeaderFooterView class]] &&
-        ![subview isKindOfClass:[SponsorBlockTableCell class]] &&
-        ![subview isKindOfClass:[UITableViewCell class]]) {
+    if (![subview isKindOfClass:[UITableViewHeaderFooterView class]] && ![subview isKindOfClass:[UITableViewCell class]]) {
         return;
     }
 
@@ -195,7 +126,7 @@ static CGFloat const kTOInsetGroupedTableViewCornerRadius = 10.0f;
 
     // If it's a cell, register for when it's set as selected
     // so we can round the corners then
-    if ([view isKindOfClass:[UITableViewCell class]] || [view isKindOfClass:[SponsorBlockTableCell class]]) {
+    if ([view isKindOfClass:[UITableViewCell class]]) {
         [view addObserver:self forKeyPath:kTOInsetGroupedTableViewSelectedKey options:0 context:nil];
     }
 
@@ -210,7 +141,7 @@ static CGFloat const kTOInsetGroupedTableViewCornerRadius = 10.0f;
         [view removeObserver:self forKeyPath:kTOInsetGroupedTableViewFrameKey context:nil];
 
         // If table cell, remove the selected observer
-        if ([view isKindOfClass:[UITableViewCell class]] || [view isKindOfClass:[SponsorBlockTableCell class]]) {
+        if ([view isKindOfClass:[UITableViewCell class]]) {
             [view removeObserver:self forKeyPath:kTOInsetGroupedTableViewSelectedKey context:nil];
         }
     }
@@ -219,7 +150,7 @@ static CGFloat const kTOInsetGroupedTableViewCornerRadius = 10.0f;
     [self.observedViews removeAllObjects];
 }
 
-- (void)observeValueForKeyPath:(NSString *)keyPath ofObject:(id)object change:(NSDictionary<NSKeyValueChangeKey,id> *)change context:(void *)context {
+- (void)observeValueForKeyPath:(NSString *)keyPath ofObject:(id)object change:(NSDictionary *)change context:(void *)context {
     // Double check this notification is about an object we care about
     if ([object isKindOfClass:[UIView class]] == NO) { return; }
     UIView *view = (UIView *)object;

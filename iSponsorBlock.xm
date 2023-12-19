@@ -1,10 +1,10 @@
+#import <rootless.h>
+#import <AudioToolbox/AudioToolbox.h>
 #import <RemoteLog.h>
 #import "Headers/iSponsorBlock.h"
-#import <AudioToolbox/AudioToolbox.h>
-#import <rootless.h>
 #import "Headers/ColorFunctions.h"
-#import "Headers/SponsorBlockSettingsController.h"
 #import "Headers/SponsorBlockRequest.h"
+#import "Headers/SponsorBlockSettingsController.h"
 #import "Headers/SponsorBlockViewController.h"
 #import "Headers/YouTubeHeader/QTMIcon.h"
 #import "Headers/YouTubeHeader/YTQTMButton.h"
@@ -49,13 +49,13 @@ NSDictionary *categoryLocalization = @{
 NSString *modifiedTimeString;
 
 %hook YTPlayerViewController
-%property (strong, nonatomic) NSMutableArray *skipSegments;
+%property (nonatomic, assign) BOOL hudDisplayed;
 %property (nonatomic, assign) NSInteger currentSponsorSegment;
-%property (strong, nonatomic) MBProgressHUD *hud;
 %property (nonatomic, assign) NSInteger unskippedSegment;
+%property (strong, nonatomic) MBProgressHUD *hud;
+%property (strong, nonatomic) NSMutableArray *skipSegments;
 %property (strong, nonatomic) NSMutableArray *userSkipSegments;
 %property (strong, nonatomic) NSString *channelID;
-%property (nonatomic, assign) BOOL hudDisplayed;
 
 // used to keep support for older versions, as seekToTime is new
 %new
@@ -64,7 +64,7 @@ NSString *modifiedTimeString;
     [self respondsToSelector:@selector(scrubToTime:)] ? [self scrubToTime:time] : [self seekToTime:time];
 }
 
-- (void)singleVideo:(id)arg1 currentVideoTimeDidChange:(YTSingleVideoTime *)arg2 {
+- (void)singleVideo:(id)arg1 currentVideoTimeDidChange:(YTSingleVideoTime *)videoTime {
     %orig;
     YTPlayerView *playerView = (YTPlayerView *)self.view;
     YTMainAppVideoPlayerOverlayView *overlayView = (YTMainAppVideoPlayerOverlayView *)playerView.overlayView;
@@ -77,13 +77,14 @@ NSString *modifiedTimeString;
         }
 
         SponsorSegment *sponsorSegment = [[SponsorSegment alloc] initWithStartTime:-1 endTime:-1 category:nil UUID:nil];
-        if (self.currentSponsorSegment <= self.skipSegments.count-1) {
+        if (self.currentSponsorSegment <= self.skipSegments.count - 1) {
             sponsorSegment = self.skipSegments[self.currentSponsorSegment];
-        } else if (self.unskippedSegment != self.currentSponsorSegment-1) {
-            sponsorSegment = self.skipSegments[self.currentSponsorSegment-1];
+        } else if (self.unskippedSegment != self.currentSponsorSegment - 1) {
+            sponsorSegment = self.skipSegments[self.currentSponsorSegment - 1];
         }
 
-        if ((lroundf(arg2.time) == ceil(sponsorSegment.startTime) && arg2.time >= sponsorSegment.startTime) || (lroundf(arg2.time) >= ceil(sponsorSegment.startTime) && arg2.time < sponsorSegment.endTime)) {
+        if ((lroundf(videoTime.time) == ceil(sponsorSegment.startTime) && videoTime.time >= sponsorSegment.startTime) ||
+            (lroundf(videoTime.time) >= ceil(sponsorSegment.startTime) && videoTime.time < sponsorSegment.endTime)) {
 
             if ([[kCategorySettings objectForKey:sponsorSegment.category] intValue] == 3) {
                 if (self.hud.superview != self.view && self.hudDisplayed == NO) {
@@ -97,10 +98,9 @@ NSString *modifiedTimeString;
                     self.hud.label.numberOfLines = 0;
                     [self.hud.button setTitle:LOC(@"Skip") forState:UIControlStateNormal];
                     [self.hud.button addTarget:self action:@selector(manuallySkipSegment:) forControlEvents:UIControlEventTouchUpInside];
+
                     // Add custom button to hide HUD
                     UIButton *cancelButton = [UIButton buttonWithType:UIButtonTypeSystem];
-                    //UIImage *cancelImage = [[UIImage systemImageNamed:@"x.circle"] imageWithRenderingMode:UIImageRenderingModeAlwaysTemplate];
-                    //[cancelButton setTintColor:[[UIColor blackColor] colorWithAlphaComponent:0.7]];
                     UIImage *cancelImage = [%c(QTMIcon) tintImage:[UIImage imageWithContentsOfFile:[tweakBundle pathForResource:@"x.circle" ofType:@"png"]]
                                                             color:[[UIColor blackColor] colorWithAlphaComponent:0.7]];
                     [cancelButton setImage:cancelImage forState:UIControlStateNormal];
@@ -126,15 +126,16 @@ NSString *modifiedTimeString;
                     });
                 }
             }
-            //edge case where segment end time is longer than the video
+
+            // An edge case where segment end time is longer than the video
             else if (sponsorSegment.endTime > self.currentVideoTotalMediaTime) {
                 [self isb_scrubToTime:self.currentVideoTotalMediaTime];
                 if (kEnableSkipCountTracking) [SponsorBlockRequest viewedVideoSponsorTime:sponsorSegment];
-            }
-            else {
+            } else {
                 [self isb_scrubToTime:sponsorSegment.endTime];
                 if (kEnableSkipCountTracking) [SponsorBlockRequest viewedVideoSponsorTime:sponsorSegment];
             }
+
             if ([[kCategorySettings objectForKey:sponsorSegment.category] intValue] == 1) {
                 if (self.hud.superview != self.view && kShowSkipNotice) {
                     [MBProgressHUD hideHUDForView:self.view animated:YES];
@@ -150,28 +151,27 @@ NSString *modifiedTimeString;
                     [self.hud hideAnimated:YES afterDelay:kSkipNoticeDuration];
 
                     // Play sound effect if option enabled
-                    if (kSkipAudioNotification) {
-                        playSponsorAudio();
-                    }
+                    if (kSkipAudioNotification) playSponsorAudio();
                 }
             }
 
-            if (self.currentSponsorSegment <= self.skipSegments.count-1 && [[kCategorySettings objectForKey:sponsorSegment.category] intValue] != 3) self.currentSponsorSegment ++;
+            if (self.currentSponsorSegment <= self.skipSegments.count - 1 && [[kCategorySettings objectForKey:sponsorSegment.category] intValue] != 3)
+                self.currentSponsorSegment++;
         }
-        else if (lroundf(arg2.time) > sponsorSegment.startTime && self.currentSponsorSegment != self.skipSegments.count && self.currentSponsorSegment != self.skipSegments.count-1) {
-            self.currentSponsorSegment ++;
+        else if (lroundf(videoTime.time) > sponsorSegment.startTime && self.currentSponsorSegment != self.skipSegments.count && self.currentSponsorSegment != self.skipSegments.count - 1) {
+            self.currentSponsorSegment++;
         }
         else if (self.currentSponsorSegment == 0 && self.unskippedSegment != -1) {
-            self.currentSponsorSegment ++;
+            self.currentSponsorSegment++;
         }
-        else if (self.currentSponsorSegment > 0 && lroundf(arg2.time) < self.skipSegments[self.currentSponsorSegment-1].startTime-0.01) {
+        else if (self.currentSponsorSegment > 0 && lroundf(videoTime.time) < self.skipSegments[self.currentSponsorSegment - 1].startTime - 0.01) {
             if ([self isMDXActive]) {
 
             }
-            else if (self.unskippedSegment != self.currentSponsorSegment-1) {
+            else if (self.unskippedSegment != self.currentSponsorSegment - 1) {
                 self.currentSponsorSegment--;
             }
-            else if (arg2.time < self.skipSegments[self.currentSponsorSegment-1].startTime-0.01) {
+            else if (videoTime.time < self.skipSegments[self.currentSponsorSegment - 1].startTime - 0.01) {
                 self.unskippedSegment = -1;
             }
         }
@@ -196,7 +196,7 @@ NSString *modifiedTimeString;
     YTPlayerView *playerView = (YTPlayerView *)self.view;
     YTMainAppVideoPlayerOverlayView *overlayView = (YTMainAppVideoPlayerOverlayView *)playerView.overlayView;
     if ([overlayView isKindOfClass:%c(YTMainAppVideoPlayerOverlayView)]) {
-        [MBProgressHUD hideHUDForView:playerView animated:YES]; //fix manual skip popup not disappearing when changing videos
+        [MBProgressHUD hideHUDForView:playerView animated:YES]; // Fix manual skip popup not disappearing when changing videos
         self.hudDisplayed = NO;  // Reset flag when changing videos
 
         self.skipSegments = [NSMutableArray array];
@@ -421,7 +421,11 @@ NSString *modifiedTimeString;
     } else {
         self.playerViewController.userSkipSegments.lastObject.endTime = self.playerViewController.currentVideoMediaTime;
         if (self.playerViewController.userSkipSegments.lastObject.endTime != self.playerViewController.currentVideoMediaTime) {
-            UIAlertController *alert = [UIAlertController alertControllerWithTitle:@"Error" message:[NSString stringWithFormat:@"End Time That You Set Was Less Than the Start Time, Please Select a Time After %ld:%02ld",lroundf(self.playerViewController.userSkipSegments.lastObject.startTime)/60, lroundf(self.playerViewController.userSkipSegments.lastObject.startTime)%60] preferredStyle:UIAlertControllerStyleAlert];
+            UIAlertController *alert = [UIAlertController alertControllerWithTitle:@"Error"
+                message:[NSString stringWithFormat:@"End Time That You Set Was Less Than the Start Time, Please Select a Time After %ld:%02ld",
+                        lroundf(self.playerViewController.userSkipSegments.lastObject.startTime) / 60,
+                        lroundf(self.playerViewController.userSkipSegments.lastObject.startTime) % 60
+                ] preferredStyle:UIAlertControllerStyleAlert];
             UIAlertAction *defaultAction = [UIAlertAction actionWithTitle:@"OK" style:UIAlertActionStyleDefault handler:^(UIAlertAction *action) {}];
             [alert addAction:defaultAction];
             [[[UIApplication sharedApplication] delegate].window.rootViewController presentViewController:alert animated:YES completion:nil];
@@ -479,7 +483,8 @@ NSString *modifiedTimeString;
         else if ([segment.category isEqualToString:@"interaction"]) color = colorWithHexString([kCategorySettings objectForKey:@"interactionColor"]);
         else if ([segment.category isEqualToString:@"selfpromo"]) color = colorWithHexString([kCategorySettings objectForKey:@"selfpromoColor"]);
         else if ([segment.category isEqualToString:@"music_offtopic"]) color = colorWithHexString([kCategorySettings objectForKey:@"music_offtopicColor"]);
-        UIView *newMarkerView = [[UIView alloc] initWithFrame:CGRectZero];
+
+        UIView *newMarkerView = [[UIView alloc] init/*WithFrame:CGRectZero*/];
         newMarkerView.backgroundColor = color;
         [self addSubview:newMarkerView];
         newMarkerView.translatesAutoresizingMaskIntoConstraints = NO;
@@ -725,14 +730,14 @@ AVQueuePlayer *queuePlayer;
 
 - (void)_advanceCurrentItemAccordingToFigPlaybackItem:(id)arg1 {
     %orig;
-    if (self.currentPlayerItem + 1 < [self items].count) self.currentPlayerItem ++;
+    if (self.currentPlayerItem + 1 < [self items].count) self.currentPlayerItem++;
 }
 
 - (void)_removeItem:(id)arg1 {
     %orig;
     [self removeTimeObserver:self.timeObserver];
     self.timeObserver = nil;
-    if (self.currentPlayerItem != 0) self.currentPlayerItem --;
+    if (self.currentPlayerItem != 0) self.currentPlayerItem--;
     [self sponsorBlockSetup];
 }
 
@@ -747,7 +752,7 @@ AVQueuePlayer *queuePlayer;
             CGFloat beginX = (startTime * scrubber.frame.size.width) / totalTime;
             CGFloat endX = (endTime * scrubber.frame.size.width) / totalTime;
             CGFloat markerWidth = endX - beginX;
-            markerView.frame = CGRectMake(beginX, scrubber.frame.size.height/2-2, markerWidth, 5);
+            markerView.frame = CGRectMake(beginX, scrubber.frame.size.height / 2 - 2, markerWidth, 5);
         }
     }
 }
@@ -916,20 +921,18 @@ NSInteger pageStyle = 0;
 
 - (NSMutableArray *)buttons {
     NSMutableArray *retVal = %orig.mutableCopy;
-    [self.sponsorBlockButton removeFromSuperview];
-    [self addSubview:self.sponsorBlockButton];
     if (!self.sponsorBlockButton || pageStyle != [%c(YTPageStyleController) pageStyle]) {
+        pageStyle = [%c(YTPageStyleController) pageStyle];
+
         UIImage *image = [UIImage imageWithContentsOfFile:[tweakBundle pathForResource:@"sponsorblocksettings-20@2x" ofType:@"png"]];
-        if ([%c(YTPageStyleController) pageStyle]) { //dark mode
+        if ([%c(YTPageStyleController) pageStyle]) { // Dark mode
             image = [%c(QTMIcon) tintImage:image color:[UIColor whiteColor]];
-        } else { //light mode
+        } else { // Light mode
             image = [%c(QTMIcon) tintImage:image color:[UIColor blackColor]];
         }
-
         self.sponsorBlockButton = [%c(YTQTMButton) barButtonWithImage:image accessibilityLabel:nil accessibilityIdentifier:nil];
-        [self.sponsorBlockButton enableNewTouchFeedback]; // Enable new touch visual
-        self.sponsorBlockButton.frame = CGRectMake(0, 0, 40, 40);
-        pageStyle = [%c(YTPageStyleController) pageStyle];
+        [self.sponsorBlockButton setFrame:CGRectMake(0, 0, 40, 40)];
+        [self.sponsorBlockButton enableNewTouchFeedback];
 
         [self.sponsorBlockButton addTarget:self action:@selector(sponsorBlockButtonPressed:) forControlEvents:UIControlEventTouchUpInside];
         [retVal insertObject:self.sponsorBlockButton atIndex:0];
@@ -940,7 +943,7 @@ NSInteger pageStyle = 0;
 - (NSMutableArray *)visibleButtons {
     NSMutableArray *retVal = %orig.mutableCopy;
 
-    //fixes button overlapping yt logo on smaller devices
+    // Fixes button overlapping yt logo on smaller devices
     [self setLeadingPadding:-10];
     if (self.sponsorBlockButton) {
         [self.sponsorBlockButton removeFromSuperview];

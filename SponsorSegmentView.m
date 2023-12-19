@@ -8,7 +8,7 @@
     if (self) {
         self.sponsorSegment = segment;
         self.editable = editable;
-        
+
         NSString *category;
         if ([segment.category isEqualToString:@"sponsor"]) {
             category = LOC(@"Sponsor");
@@ -28,59 +28,58 @@
         else if ([segment.category isEqualToString:@"music_offtopic"]) {
             category = LOC(@"Non-Music");
         }
+
         self.categoryLabel = [[UILabel alloc] initWithFrame:self.frame];
         self.segmentLabel = [[UILabel alloc] initWithFrame:self.frame];
         self.categoryLabel.text = category;
         self.categoryLabel.textColor = [UIColor whiteColor];
-        
+
         NSInteger startSeconds = lroundf(segment.startTime);
         NSInteger startHours = startSeconds / 3600;
-        NSInteger  startMinutes = (startSeconds - (startHours * 3600)) / 60;
+        NSInteger startMinutes = (startSeconds - (startHours * 3600)) / 60;
         startSeconds = startSeconds %60;
         NSString *startTime;
         if (startHours >= 1) {
             startTime = [NSString stringWithFormat:@"%ld:%02ld:%02ld", startHours, startMinutes, startSeconds];
-        }
-        else {
+        } else {
             startTime = [NSString stringWithFormat:@"%ld:%02ld", startMinutes, startSeconds];
         }
-        
+
         NSInteger endSeconds = lroundf(segment.endTime);
         NSInteger endHours = endSeconds / 3600;
-        NSInteger  endMinutes = (endSeconds - (endHours * 3600)) / 60;
+        NSInteger endMinutes = (endSeconds - (endHours * 3600)) / 60;
         endSeconds = endSeconds %60;
         NSString *endTime;
         if (endHours >= 1) {
             endTime = [NSString stringWithFormat:@"%ld:%02ld:%02ld", endHours, endMinutes, endSeconds];
-        }
-        else {
+        } else {
             endTime = [NSString stringWithFormat:@"%ld:%02ld", endMinutes, endSeconds];
         }
-        
+
         self.segmentLabel.text = [NSString stringWithFormat:@"%@ %@ %@ %@", LOC(@"From"), startTime, LOC(@"to"), endTime];
         self.segmentLabel.textColor = [UIColor whiteColor];
-        
+
         [self addSubview:self.categoryLabel];
         self.categoryLabel.adjustsFontSizeToFitWidth = YES;
         self.categoryLabel.font = [UIFont systemFontOfSize:12];
         self.categoryLabel.textAlignment = NSTextAlignmentCenter;
         self.categoryLabel.translatesAutoresizingMaskIntoConstraints = NO;
-        
+
         [self addSubview:self.segmentLabel];
         self.segmentLabel.adjustsFontSizeToFitWidth = YES;
         self.segmentLabel.font = [UIFont systemFontOfSize:12];
         self.segmentLabel.textAlignment = NSTextAlignmentCenter;
         self.segmentLabel.translatesAutoresizingMaskIntoConstraints = NO;
-        
+
         [self.segmentLabel.widthAnchor constraintEqualToAnchor:self.widthAnchor].active = YES;
         [self.segmentLabel.heightAnchor constraintEqualToConstant:self.frame.size.height/2].active = YES;
-        
+
         [self.categoryLabel.widthAnchor constraintEqualToAnchor:self.widthAnchor].active = YES;
         [self.categoryLabel.heightAnchor constraintEqualToConstant:self.frame.size.height/2].active = YES;
         [self.categoryLabel.topAnchor constraintEqualToAnchor:self.segmentLabel.bottomAnchor].active = YES;
         NSString *test = hexFromUIColor(UIColor.blackColor);
         self.backgroundColor = colorWithHexString(test);
-        self.backgroundColor = colorWithHexString(@"#3A3A3C"); //UIColor.systemGray4Color;
+        self.backgroundColor = colorWithHexString(@"#3A3A3C");
         self.layer.cornerRadius = 10;
         self.segmentLabel.layer.cornerRadius = 10;
         self.categoryLabel.layer.cornerRadius = 10;

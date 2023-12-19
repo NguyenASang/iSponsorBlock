@@ -69,13 +69,8 @@
 
     //self.view.backgroundColor = UIColor.systemBackgroundColor;
 
-    //detects if device is an se gen 1 or not, crude fix for text getting cut off
-    //if ([UIScreen mainScreen].bounds.size.width > 320) {
-        //[[UITableView alloc] initWithFrame:self.view.frame style:UITableViewStyleInsetGrouped];
-    //} else {
-        //self.tableView = [[UITableView alloc] initWithFrame:self.view.frame style:UITableViewStyleGrouped];
-    //}
-
+    // Detects if device is an se gen 1 or not, crude fix for text getting cut off
+    //if ([UIScreen mainScreen].bounds.size.width > 320) {} // later
     self.tableView = [[TOInsetGroupedTableView alloc] initWithFrame:self.view.frame];
     self.tableView.toggleDarkMode = self.toggleDarkMode;
 
@@ -104,7 +99,7 @@
     [label.centerXAnchor constraintEqualToAnchor:imageView.centerXAnchor].active = YES;
     [label.topAnchor constraintEqualToAnchor:imageView.bottomAnchor constant:5].active = YES;
 
-    //for dismissing num pad when tapping anywhere on the string
+    // For dismissing numpad when tapping anywhere on the string
     UITapGestureRecognizer *tap = [[UITapGestureRecognizer alloc] initWithTarget:self.view action:@selector(endEditing:)];
     tap.cancelsTouchesInView = NO;
     [self.view addGestureRecognizer:tap];
@@ -112,7 +107,7 @@
     self.sectionTitles = @[LOC(@"Sponsor"), LOC(@"Intermission/IntroAnimation"), LOC(@"Endcards/Credits"), LOC(@"InteractionReminder"), LOC(@"Unpaid/SelfPromotion"), LOC(@"Non-MusicSection"), LOC(@"SponsorBlockUserID"), LOC(@"SponsorBlockAPIInstance")];
 }
 
-//Add iSponsorBlock text to Navbar label if header text out of screen
+// Add iSponsorBlock text to Navbar label if header text out of screen
 - (void)scrollViewDidScroll:(UIScrollView *)scrollView {
     CGRect labelCellRect = [self.tableView rectForRowAtIndexPath:[NSIndexPath indexPathForRow:0 inSection:0]];
     CGRect visibleRect = CGRectMake(self.tableView.contentOffset.x,
@@ -171,15 +166,7 @@
         tableCell.backgroundColor = self.toggleDarkMode ? colorWithHexString(@"#1C1C1E") : [UIColor whiteColor];
 
         NSDictionary *categorySettings = [self.settings objectForKey:@"categorySettings"];
-        //UISegmentedControl *segmentedControl = [[UISegmentedControl alloc] initWithItems:@[LOC(@"Disable"), LOC(@"AutoSkip"), LOC(@"ShowInSeekBar"), LOC(@"ManualSkip")]];
         TOSegmentedControl *segmentedControl = [[TOSegmentedControl alloc] initWithItems:@[LOC(@"Disable"), LOC(@"AutoSkip"), LOC(@"ShowInSeekBar"), LOC(@"ManualSkip")] withDarkMode:self.toggleDarkMode];
-
-        //make it so "Show in Seek Bar" text won't be cut off on certain devices
-        //NSMutableArray *segments = [segmentedControl valueForKey:@"_segments"];
-        //UISegment *segment = segments[2];
-        //UILabel *label = [segment valueForKey:@"_info"];
-        //label.textColor = self.toggleDarkMode ? [UIColor whiteColor] : [UIColor blackColor];
-        //label.adjustsFontSizeToFitWidth = YES;
 
         switch (indexPath.section) {
             case 1:

@@ -24,9 +24,9 @@
 "SetColorToShowInSeekBar" = "Set Color To Show in Seek Bar";
 
 "UserID" = "User ID:";
-"UserIDFooter" = "If you want to use a custom SponsorBlock user ID, you can enter it here. If you don't know what this is, leave it as default.";
+"UserIDFooter" = "If you want to use a custom SponsorBlock user ID, you can enter it here. If you don't know what this is, leave it as default or empty to reset.";
 "API_URL" = "API URL:";
-"APIFooter" = "If you want to use a custom SponsorBlock API instance, you can enter it here. If you don't know what this is, leave it as default. Example:https://sponsor.ajay.app/api";
+"APIFooter" = "If you want to use a custom SponsorBlock API instance, you can enter it here. If you don't know what this is, leave it as default. Example: https://sponsor.ajay.app/api";
 "MinimumSegmentDuration" = "Set Minimum Segment Duration:";
 "HowLongNoticeWillAppear" = "Set How Long Skip Notice Will Appear:";
 "ShowSkipNotice" = "Show Skip Notice";

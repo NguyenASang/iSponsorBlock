@@ -8,6 +8,7 @@
 _
 obj
 .theos
+.vscode
 .DS_Store
 
 ### XCode stuff
