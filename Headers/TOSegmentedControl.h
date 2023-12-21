@@ -39,7 +39,7 @@ NS_SWIFT_NAME(SegmentedControl)
 IB_DESIGNABLE @interface TOSegmentedControl : UIControl
 
 /** Dark mode */
-@property (nonatomic, assign) BOOL toggleDarkMode;
+@property (nonatomic, assign) BOOL isDarkMode;
 
 /** The items currently assigned to this segmented control. (Can be a combination of strings and images) */
 @property (nonatomic, copy, nullable) NSArray *items;
@@ -103,7 +103,7 @@ IB_DESIGNABLE @interface TOSegmentedControl : UIControl
 
  @param items An array of either images, or strings to display
 */
-- (instancetype)initWithItems:(NSArray *)items withDarkMode:(BOOL)darkMode NS_SWIFT_NAME(init(items:withDarkMode:));
+- (instancetype)initWithItems:(NSArray *)items isDarkMode:(BOOL)isDarkMode NS_SWIFT_NAME(init(items:isDarkMode:));
 
 /**
  Replaces the content of an existing segment with a new image.

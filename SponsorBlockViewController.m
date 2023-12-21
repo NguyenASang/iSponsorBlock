@@ -1,6 +1,5 @@
-#import "Headers/ColorFunctions.h"
 #import "Headers/SponsorBlockViewController.h"
-#import "Headers/Localization.h"
+#import "Headers/UtilityFunctions.h"
 
 @implementation SponsorBlockViewController
 

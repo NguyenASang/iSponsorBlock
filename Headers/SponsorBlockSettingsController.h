@@ -4,7 +4,7 @@
 #import "TOInsetGroupedTableView.h"
 
 @protocol HBColorPickerDelegate <NSObject>
-@optional -(void)colorPicker:(id)colorPicker didSelectColor:(UIColor *)color;
+@optional - (void)colorPicker:(id)colorPicker didSelectColor:(UIColor *)color;
 @end
 
 @interface UITableViewCell ()
@@ -45,13 +45,13 @@
 @end
 
 @interface SponsorBlockSettingsController : UIViewController <UITableViewDelegate, UITableViewDataSource, UITextFieldDelegate>
-@property (nonatomic, assign) BOOL toggleDarkMode;
+@property (nonatomic, assign) BOOL isDarkMode;
 @property (nonatomic, strong) NSString *tweakTitle;
-@property (strong, nonatomic) TOInsetGroupedTableView *tableView;
 @property (strong, nonatomic) NSArray *sectionTitles;
 @property (strong, nonatomic) NSMutableDictionary *settings;
 @property (strong, nonatomic) NSString *settingsPath;
+@property (strong, nonatomic) TOInsetGroupedTableView *tableView;
+- (void)categorySegmentSelected:(UISegmentedControl *)segmentedControl;
 - (void)enabledSwitchToggled:(UISwitch *)sender;
 - (void)switchToggled:(UISwitch *)sender;
-- (void)categorySegmentSelected:(UISegmentedControl *)segmentedControl;
 @end

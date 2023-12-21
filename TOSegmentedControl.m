@@ -30,7 +30,7 @@
 static NSMutableDictionary *calculateSegmentWidth(NSMutableDictionary *segments, CGFloat segmentedControlWidth) {
     CGFloat currentWidth = 0;
     for (NSString *key in [segments allKeys]) {
-        currentWidth = currentWidth + [segments[key] floatValue];
+        currentWidth += [segments[key] floatValue];
     }
 
     NSUInteger i = 0;
@@ -117,46 +117,16 @@ static CGFloat const kTOSegmentedControlDirectionArrowMargin = 2.0f;
 
 #pragma mark - Class Init -
 
-- (instancetype)initWithItems:(NSArray *)items withDarkMode:(BOOL)darkMode
-{
-    self.toggleDarkMode = darkMode;
+- (instancetype)initWithItems:(NSArray *)items isDarkMode:(BOOL)isDarkMode {
+    self.isDarkMode = isDarkMode;
     if (self = [super initWithFrame:(CGRect){{0.0f, 0.0f}, {300.0f, 32.0f}}]) {
         [self commonInit];
         self.items = [self sanitizedItemArrayWithItems:items];
     }
-
     return self;
 }
 
-- (instancetype)initWithCoder:(NSCoder *)coder
-{
-    if (self = [super initWithCoder:coder]) {
-        [self commonInit];
-    }
-
-    return self;
-}
-
-- (instancetype)initWithFrame:(CGRect)frame
-{
-    if (self = [super initWithFrame:frame]) {
-        [self commonInit];
-    }
-
-    return self;
-}
-
-- (instancetype)init
-{
-    if (self = [super initWithFrame:(CGRect){{0.0f, 0.0f}, {300.0f, 32.0f}}]) {
-        [self commonInit];
-    }
-
-    return self;
-}
-
-- (void)commonInit
-{
+- (void)commonInit {
     // Create content view
     self.trackView = [[UIView alloc] initWithFrame:self.bounds];
     self.trackView.autoresizingMask = UIViewAutoresizingFlexibleWidth | UIViewAutoresizingFlexibleHeight;
@@ -176,11 +146,11 @@ static CGFloat const kTOSegmentedControlDirectionArrowMargin = 2.0f;
     self.separatorViews = [NSMutableArray array];
 
     // Set default resettable values
-    self.backgroundColor = self.toggleDarkMode ? [UIColor colorWithRed:0.898f green:0.898f blue:1.0f alpha:0.12f] : [UIColor colorWithRed:0.0f green:0.0f blue:0.08f alpha:0.06666f];
-    self.thumbColor = self.toggleDarkMode ? [UIColor colorWithRed:0.357f green:0.357f blue:0.376f alpha:1.0f] : [UIColor whiteColor];
-    self.separatorColor = self.toggleDarkMode ? [UIColor colorWithRed:0.918f green:0.918f blue:1.0f alpha:0.16f] : [UIColor colorWithRed:0.0f green:0.0f blue:0.08f alpha:0.1f];
-    self.itemColor = self.toggleDarkMode ? [UIColor whiteColor] : [UIColor blackColor];
-    self.selectedItemColor = self.toggleDarkMode ? [UIColor whiteColor] : [UIColor blackColor];
+    self.backgroundColor = self.isDarkMode ? [UIColor colorWithRed:0.898f green:0.898f blue:1.0f alpha:0.12f] : [UIColor colorWithRed:0.0f green:0.0f blue:0.08f alpha:0.06666f];
+    self.thumbColor = self.isDarkMode ? [UIColor colorWithRed:0.357f green:0.357f blue:0.376f alpha:1.0f] : [UIColor whiteColor];
+    self.separatorColor = self.isDarkMode ? [UIColor colorWithRed:0.918f green:0.918f blue:1.0f alpha:0.16f] : [UIColor colorWithRed:0.0f green:0.0f blue:0.08f alpha:0.1f];
+    self.itemColor = self.isDarkMode ? [UIColor whiteColor] : [UIColor blackColor];
+    self.selectedItemColor = self.isDarkMode ? [UIColor whiteColor] : [UIColor blackColor];
     self.textFont = nil;
     self.selectedTextFont = nil;
 
@@ -224,8 +194,7 @@ static CGFloat const kTOSegmentedControlDirectionArrowMargin = 2.0f;
 
 #pragma mark - Item Management -
 
-- (NSMutableArray *)sanitizedItemArrayWithItems:(NSArray *)items
-{
+- (NSMutableArray *)sanitizedItemArrayWithItems:(NSArray *)items {
     // Filter the items to extract only strings and images
     NSMutableArray *sanitizedItems = [NSMutableArray array];
     for (id item in items) {
@@ -238,8 +207,7 @@ static CGFloat const kTOSegmentedControlDirectionArrowMargin = 2.0f;
     return sanitizedItems;
 }
 
-- (void)updateSeparatorViewCount
-{
+- (void)updateSeparatorViewCount {
     // Work out how many separators we need (One less than segments)
     NSInteger numberOfSeparators = self.segments.count - 1;
 
@@ -264,19 +232,16 @@ static CGFloat const kTOSegmentedControlDirectionArrowMargin = 2.0f;
 
 #pragma mark - Public Item Access -
 
-- (nullable UIImage *)imageForSegmentAtIndex:(NSInteger)index
-{
+- (nullable UIImage *)imageForSegmentAtIndex:(NSInteger)index {
     if (index < 0 || index >= self.segments.count) { return nil; }
     return [self objectForSegmentAtIndex:index class:UIImage.class];
 }
 
-- (nullable NSString *)titleForSegmentAtIndex:(NSInteger)index
-{
+- (nullable NSString *)titleForSegmentAtIndex:(NSInteger)index {
     return [self objectForSegmentAtIndex:index class:NSString.class];
 }
 
-- (nullable id)objectForSegmentAtIndex:(NSInteger)index class:(Class)class
-{
+- (nullable id)objectForSegmentAtIndex:(NSInteger)index class:(Class)class {
     // Make sure the index provided is valid
     if (index < 0 || index >= self.items.count) { return nil; }
 
@@ -290,55 +255,45 @@ static CGFloat const kTOSegmentedControlDirectionArrowMargin = 2.0f;
 
 #pragma mark Add New Items
 
-- (void)addSegmentWithImage:(UIImage *)image
-{
+- (void)addSegmentWithImage:(UIImage *)image {
     [self addSegmentWithImage:image reversible:NO];
 }
 
-- (void)addSegmentWithImage:(UIImage *)image reversible:(BOOL)reversible
-{
+- (void)addSegmentWithImage:(UIImage *)image reversible:(BOOL)reversible {
     [self addSegmentWithObject:image reversible:reversible];
 }
 
-- (void)addSegmentWithTitle:(NSString *)title
-{
+- (void)addSegmentWithTitle:(NSString *)title {
     [self addSegmentWithTitle:title reversible:NO];
 }
 
-- (void)addSegmentWithTitle:(NSString *)title reversible:(BOOL)reversible
-{
+- (void)addSegmentWithTitle:(NSString *)title reversible:(BOOL)reversible {
     [self addSegmentWithObject:title reversible:reversible];
 }
 
-- (void)addSegmentWithObject:(id)object reversible:(BOOL)reversible
-{
+- (void)addSegmentWithObject:(id)object reversible:(BOOL)reversible {
     [self insertSegmentWithObject:object reversible:reversible atIndex:self.segments.count];
 }
 
 #pragma mark Inserting New Items
 
-- (void)insertSegmentWithTitle:(NSString *)title atIndex:(NSInteger)index
-{
+- (void)insertSegmentWithTitle:(NSString *)title atIndex:(NSInteger)index {
     [self insertSegmentWithTitle:title reversible:NO atIndex:index];
 }
 
-- (void)insertSegmentWithTitle:(NSString *)title reversible:(BOOL)reversible atIndex:(NSInteger)index
-{
+- (void)insertSegmentWithTitle:(NSString *)title reversible:(BOOL)reversible atIndex:(NSInteger)index {
     [self insertSegmentWithObject:title reversible:reversible atIndex:index];
 }
 
-- (void)insertSegmentWithImage:(UIImage *)image atIndex:(NSInteger)index
-{
+- (void)insertSegmentWithImage:(UIImage *)image atIndex:(NSInteger)index {
     [self insertSegmentWithImage:image reversible:NO atIndex:index];
 }
 
-- (void)insertSegmentWithImage:(UIImage *)image reversible:(BOOL)reversible atIndex:(NSInteger)index
-{
+- (void)insertSegmentWithImage:(UIImage *)image reversible:(BOOL)reversible atIndex:(NSInteger)index {
     [self insertSegmentWithObject:image reversible:reversible atIndex:index];
 }
 
-- (void)insertSegmentWithObject:(id)object reversible:(BOOL)reversible atIndex:(NSInteger)index
-{
+- (void)insertSegmentWithObject:(id)object reversible:(BOOL)reversible atIndex:(NSInteger)index {
     // If an invalid index was provided, cap it to the available range
     if (index < 0) { index = 0; }
     if (index >= self.segments.count) { index = self.segments.count; }
@@ -365,28 +320,23 @@ static CGFloat const kTOSegmentedControlDirectionArrowMargin = 2.0f;
 
 #pragma mark Replacing Items
 
-- (void)setImage:(UIImage *)image forSegmentAtIndex:(NSInteger)index
-{
+- (void)setImage:(UIImage *)image forSegmentAtIndex:(NSInteger)index {
     [self setImage:image reversible:NO forSegmentAtIndex:index];
 }
 
-- (void)setImage:(UIImage *)image reversible:(BOOL)reversible forSegmentAtIndex:(NSInteger)index
-{
+- (void)setImage:(UIImage *)image reversible:(BOOL)reversible forSegmentAtIndex:(NSInteger)index {
     [self setObject:image reversible:reversible forSegmentAtIndex:index];
 }
 
-- (void)setTitle:(NSString *)title forSegmentAtIndex:(NSInteger)index
-{
+- (void)setTitle:(NSString *)title forSegmentAtIndex:(NSInteger)index {
     [self setTitle:title reversible:NO forSegmentAtIndex:index];
 }
 
-- (void)setTitle:(NSString *)title reversible:(BOOL)reversible forSegmentAtIndex:(NSInteger)index
-{
+- (void)setTitle:(NSString *)title reversible:(BOOL)reversible forSegmentAtIndex:(NSInteger)index {
     [self setObject:title reversible:reversible forSegmentAtIndex:index];
 }
 
-- (void)setObject:(id)object reversible:(BOOL)reversible forSegmentAtIndex:(NSInteger)index
-{
+- (void)setObject:(id)object reversible:(BOOL)reversible forSegmentAtIndex:(NSInteger)index {
     NSAssert([object isKindOfClass:NSString.class] || [object isKindOfClass:UIImage.class],
                 @"TOSegmentedControl: Only images and strings are supported.");
 
@@ -411,13 +361,11 @@ static CGFloat const kTOSegmentedControlDirectionArrowMargin = 2.0f;
 
 #pragma mark Deleting Items
 
-- (void)removeLastSegment
-{
+- (void)removeLastSegment {
     [self removeSegmentAtIndex:self.items.count - 1];
 }
 
-- (void)removeSegmentAtIndex:(NSInteger)index
-{
+- (void)removeSegmentAtIndex:(NSInteger)index {
     if (index < 0 || index >= self.items.count) { return; }
 
     // Remove from the item list
@@ -433,8 +381,7 @@ static CGFloat const kTOSegmentedControlDirectionArrowMargin = 2.0f;
     [self updateSeparatorViewCount];
 }
 
-- (void)removeAllSegments
-{
+- (void)removeAllSegments {
     // Remove all item objects
     for (TOSegmentedControlSegment * segment in self.segments) {
         [segment.containerView removeFromSuperview];
@@ -453,8 +400,7 @@ static CGFloat const kTOSegmentedControlDirectionArrowMargin = 2.0f;
 
 #pragma mark Enabled/Disabled
 
-- (void)setEnabled:(BOOL)enabled forSegmentAtIndex:(NSInteger)index
-{
+- (void)setEnabled:(BOOL)enabled forSegmentAtIndex:(NSInteger)index {
     if (index < 0 || index >= self.segments.count) { return; }
     self.segments[index].isDisabled = !enabled;
     [self setNeedsLayout];
@@ -482,8 +428,7 @@ static CGFloat const kTOSegmentedControlDirectionArrowMargin = 2.0f;
     self.selectedSegmentIndex = -1;
 }
 
-- (BOOL)isEnabledForSegmentAtIndex:(NSInteger)index
-{
+- (BOOL)isEnabledForSegmentAtIndex:(NSInteger)index {
     if (index < 0 || index >= self.segments.count) { return NO; }
     return !self.segments[index].isDisabled;
 }
@@ -492,35 +437,30 @@ static CGFloat const kTOSegmentedControlDirectionArrowMargin = 2.0f;
 
 // Accessors for setting when a segment is reversible.
 
-- (void)setReversible:(BOOL)reversible forSegmentAtIndex:(NSInteger)index
-{
+- (void)setReversible:(BOOL)reversible forSegmentAtIndex:(NSInteger)index {
     if (index < 0 || index >= self.segments.count) { return; }
     self.segments[index].isReversible = reversible;
 }
 
-- (BOOL)isReversibleForSegmentAtIndex:(NSInteger)index
-{
+- (BOOL)isReversibleForSegmentAtIndex:(NSInteger)index {
     if (index < 0 || index >= self.segments.count) { return NO; }
     return !self.segments[index].isReversible;
 }
 
 // Accessors for toggling whether a reversible segment is currently reversed.
-- (void)setReversed:(BOOL)reversed forSegmentAtIndex:(NSInteger)index
-{
+- (void)setReversed:(BOOL)reversed forSegmentAtIndex:(NSInteger)index {
     if (index < 0 || index >= self.segments.count) { return; }
     self.segments[index].isReversed = reversed;
 }
 
-- (BOOL)isReversedForSegmentAtIndex:(NSInteger)index
-{
+- (BOOL)isReversedForSegmentAtIndex:(NSInteger)index {
     if (index < 0 || index >= self.segments.count) { return NO; }
     return !self.segments[index].isReversed;
 }
 
 #pragma mark - View Layout -
 
-- (void)layoutThumbView
-{
+- (void)layoutThumbView {
     // Hide the thumb view if no segments are selected
     if (self.selectedSegmentIndex < 0 || !self.enabled) {
         self.thumbView.hidden = YES;
@@ -551,8 +491,7 @@ static CGFloat const kTOSegmentedControlDirectionArrowMargin = 2.0f;
     self.thumbView.layer.shadowPath = shadowPath.CGPath;
 }
 
-- (void)layoutItemViews
-{
+- (void)layoutItemViews {
     // Lay out the item views
     NSInteger i = 0;
     for (TOSegmentedControlSegment *item in self.segments) {
@@ -602,8 +541,7 @@ static CGFloat const kTOSegmentedControlDirectionArrowMargin = 2.0f;
     [self setItemAtIndex:self.selectedSegmentIndex selected:YES];
 }
 
-- (void)layoutSeparatorViews
-{
+- (void)layoutSeparatorViews {
     CGSize size = self.trackView.frame.size;
     CGFloat segmentWidth = 0;
     CGFloat xOffset = (_thumbInset + segmentWidth) - 1.0f;
@@ -628,8 +566,7 @@ static CGFloat const kTOSegmentedControlDirectionArrowMargin = 2.0f;
    [self refreshSeparatorViewsForSelectedIndex:self.selectedSegmentIndex];
 }
 
-- (void)layoutSubviews
-{
+- (void)layoutSubviews {
     [super layoutSubviews];
 
     // Lay-out the thumb view
@@ -642,8 +579,7 @@ static CGFloat const kTOSegmentedControlDirectionArrowMargin = 2.0f;
     [self layoutSeparatorViews];
 }
 
-- (CGFloat)widthOfSegmentAtIndex:(NSInteger)index
-{
+- (CGFloat)widthOfSegmentAtIndex:(NSInteger)index {
     if (!self.apportionsSegmentWidthsByContent) {
         return floorf((self.bounds.size.width - (_thumbInset * 2.0f)) / self.numberOfSegments);
     }
@@ -670,8 +606,7 @@ static CGFloat const kTOSegmentedControlDirectionArrowMargin = 2.0f;
     return [self.widthOfItems[self.items[index]] floatValue];
 }
 
-- (CGRect)frameForSegmentAtIndex:(NSInteger)index
-{
+- (CGRect)frameForSegmentAtIndex:(NSInteger)index {
     CGRect frame = CGRectZero;
 
     if (!self.apportionsSegmentWidthsByContent) {
@@ -695,8 +630,7 @@ static CGFloat const kTOSegmentedControlDirectionArrowMargin = 2.0f;
     return CGRectIntegral(frame);
 }
 
-- (CGRect)frameForImageArrowViewWithItemFrame:(CGRect)itemFrame
-{
+- (CGRect)frameForImageArrowViewWithItemFrame:(CGRect)itemFrame {
     CGRect frame = CGRectZero;
     frame.size = self.arrowImage.size;
     frame.origin.x = CGRectGetMaxX(itemFrame) + kTOSegmentedControlDirectionArrowMargin;
@@ -704,8 +638,7 @@ static CGFloat const kTOSegmentedControlDirectionArrowMargin = 2.0f;
     return frame;
 }
 
-- (NSInteger)segmentIndexForPoint:(CGPoint)point
-{
+- (NSInteger)segmentIndexForPoint:(CGPoint)point {
     if (!self.apportionsSegmentWidthsByContent) {
         CGFloat segmentWidth = floorf(self.frame.size.width / self.numberOfSegments);
         NSInteger segment = floorf(point.x / segmentWidth);
@@ -724,15 +657,13 @@ static CGFloat const kTOSegmentedControlDirectionArrowMargin = 2.0f;
     return -1;
 }
 
-- (void)setThumbViewShrunken:(BOOL)shrunken
-{
+- (void)setThumbViewShrunken:(BOOL)shrunken {
     CGFloat scale = shrunken ? kTOSegmentedControlSelectedScale : 1.0f;
     self.thumbView.transform = CGAffineTransformScale(CGAffineTransformIdentity,
                                                       scale, scale);
 }
 
-- (void)setItemViewAtIndex:(NSInteger)segmentIndex shrunken:(BOOL)shrunken
-{
+- (void)setItemViewAtIndex:(NSInteger)segmentIndex shrunken:(BOOL)shrunken {
     NSAssert(segmentIndex >= 0 && segmentIndex < self.items.count,
              @"TOSegmentedControl: Array should not be out of bounds");
 
@@ -777,8 +708,7 @@ static CGFloat const kTOSegmentedControlDirectionArrowMargin = 2.0f;
     arrowView.transform = transform;
 }
 
-- (void)setItemViewAtIndex:(NSInteger)segmentIndex reversed:(BOOL)reversed
-{
+- (void)setItemViewAtIndex:(NSInteger)segmentIndex reversed:(BOOL)reversed {
     NSAssert(segmentIndex >= 0 && segmentIndex < self.items.count,
              @"TOSegmentedControl: Array should not be out of bounds");
 
@@ -786,8 +716,7 @@ static CGFloat const kTOSegmentedControlDirectionArrowMargin = 2.0f;
     [segment setArrowImageReversed:reversed];
 }
 
-- (void)setItemAtIndex:(NSInteger)index selected:(BOOL)selected
-{
+- (void)setItemAtIndex:(NSInteger)index selected:(BOOL)selected {
     NSAssert(index >= 0 && index < self.segments.count,
              @"TOSegmentedControl: Array should not be out of bounds");
 
@@ -819,21 +748,18 @@ static CGFloat const kTOSegmentedControlDirectionArrowMargin = 2.0f;
     [segment setArrowImageReversed:segment.isReversed];
 }
 
-- (void)setItemAtIndex:(NSInteger)index faded:(BOOL)faded
-{
+- (void)setItemAtIndex:(NSInteger)index faded:(BOOL)faded {
     NSAssert(index >= 0 && index < self.segments.count,
              @"Array should not be out of bounds");
     UIView *itemView = self.segments[index].itemView;
     itemView.alpha = faded ? kTOSegmentedControlSelectedTextAlpha : 1.0f;
 }
 
-- (void)refreshSeparatorViewsForSelectedIndex:(NSInteger)index
-{
+- (void)refreshSeparatorViewsForSelectedIndex:(NSInteger)index {
     [self refreshSeparatorViewsForSelectedIndexes:[NSSet setWithObject:@(index)]];
 }
 
-- (void)refreshSeparatorViewsForSelectedIndexes:(NSSet<NSNumber *> *)indexes
-{
+- (void)refreshSeparatorViewsForSelectedIndexes:(NSSet<NSNumber *> *)indexes {
     // Hide the separators on either side of the selected segment
     NSInteger i = 0;
     for (UIView *separatorView in self.separatorViews) {
@@ -852,8 +778,7 @@ static CGFloat const kTOSegmentedControlDirectionArrowMargin = 2.0f;
 
 #pragma mark - Touch Interaction -
 
-- (void)didTapDown:(UIControl *)control withEvent:(UIEvent *)event
-{
+- (void)didTapDown:(UIControl *)control withEvent:(UIEvent *)event {
     // Exit out if the control is disabled
     if (!self.enabled || self.hasNoSegments) { return; }
 
@@ -900,8 +825,7 @@ static CGFloat const kTOSegmentedControlDirectionArrowMargin = 2.0f;
                      completion:nil];
 }
 
-- (void)didDragTap:(UIControl *)control withEvent:(UIEvent *)event
-{
+- (void)didDragTap:(UIControl *)control withEvent:(UIEvent *)event {
     // Exit out if the control is disabled
     if (!self.enabled || self.hasNoSegments) { return; }
 
@@ -983,8 +907,7 @@ static CGFloat const kTOSegmentedControlDirectionArrowMargin = 2.0f;
     self.focusedIndex = tappedIndex;
 }
 
-- (void)didExitTapBounds:(UIControl *)control withEvent:(UIEvent *)event
-{
+- (void)didExitTapBounds:(UIControl *)control withEvent:(UIEvent *)event {
     // Exit out if the control is disabled
     if (!self.enabled || self.hasNoSegments) { return; }
 
@@ -1002,8 +925,7 @@ static CGFloat const kTOSegmentedControlDirectionArrowMargin = 2.0f;
     self.focusedIndex = -1;
 }
 
-- (void)didEnterTapBounds:(UIControl *)control withEvent:(UIEvent *)event
-{
+- (void)didEnterTapBounds:(UIControl *)control withEvent:(UIEvent *)event {
     // Exit out if the control is disabled
     if (!self.enabled || self.hasNoSegments) { return; }
 
@@ -1021,8 +943,7 @@ static CGFloat const kTOSegmentedControlDirectionArrowMargin = 2.0f;
                      completion:nil];
 }
 
-- (void)didEndTap:(UIControl *)control withEvent:(UIEvent *)event
-{
+- (void)didEndTap:(UIControl *)control withEvent:(UIEvent *)event {
     // Exit out if the control is disabled
     if (!self.enabled || self.hasNoSegments) { return; }
 
@@ -1090,8 +1011,7 @@ static CGFloat const kTOSegmentedControlDirectionArrowMargin = 2.0f;
     self.focusedIndex = -1;
 }
 
-- (void)sendIndexChangedEventActions
-{
+- (void)sendIndexChangedEventActions {
     // Trigger the action event for any targets that were
     [self sendActionsForControlEvents:UIControlEventValueChanged];
 
@@ -1107,8 +1027,7 @@ static CGFloat const kTOSegmentedControlDirectionArrowMargin = 2.0f;
 // -----------------------------------------------
 // Selected Item Index
 
-- (void)setSelectedSegmentIndex:(NSInteger)selectedSegmentIndex animated:(BOOL)animated
-{
+- (void)setSelectedSegmentIndex:(NSInteger)selectedSegmentIndex animated:(BOOL)animated {
     if (self.selectedSegmentIndex == selectedSegmentIndex) { return; }
 
     // Set the new value
@@ -1164,16 +1083,14 @@ static CGFloat const kTOSegmentedControlDirectionArrowMargin = 2.0f;
 // -----------------------------------------------
 // Selected Item Reversed
 
-- (void)setSelectedSegmentReversed:(BOOL)selectedSegmentReversed
-{
+- (void)setSelectedSegmentReversed:(BOOL)selectedSegmentReversed {
     if (self.selectedSegmentIndex < 0) { return; }
     TOSegmentedControlSegment *segment = self.segments[self.selectedSegmentIndex];
     if (segment.isReversible == NO) { return; }
     segment.isReversed = selectedSegmentReversed;
 }
 
-- (BOOL)selectedSegmentReversed
-{
+- (BOOL)selectedSegmentReversed {
     if (self.selectedSegmentIndex < 0) { return NO; }
     TOSegmentedControlSegment *segment = self.segments[self.selectedSegmentIndex];
     if (segment.isReversible == NO) { return NO; }
@@ -1183,8 +1100,7 @@ static CGFloat const kTOSegmentedControlDirectionArrowMargin = 2.0f;
 // -----------------------------------------------
 // Items
 
-- (void)setItems:(NSArray *)items
-{
+- (void)setItems:(NSArray *)items {
     if (items == _items) { return; }
 
     // Remove all current items
@@ -1210,8 +1126,7 @@ static CGFloat const kTOSegmentedControlDirectionArrowMargin = 2.0f;
 // -----------------------------------------------
 // Corner Radius
 
-- (void)setCornerRadius:(CGFloat)cornerRadius
-{
+- (void)setCornerRadius:(CGFloat)cornerRadius {
     self.trackView.layer.cornerRadius = cornerRadius;
     self.thumbView.layer.cornerRadius = (self.cornerRadius - _thumbInset) + 1.0f;
 }
@@ -1221,8 +1136,7 @@ static CGFloat const kTOSegmentedControlDirectionArrowMargin = 2.0f;
 // -----------------------------------------------
 // Thumb Color
 
-- (void)setThumbColor:(UIColor *)thumbColor
-{
+- (void)setThumbColor:(UIColor *)thumbColor {
     self.thumbView.backgroundColor = thumbColor;
     if (self.thumbView.backgroundColor != nil) { return; }
 
@@ -1234,8 +1148,7 @@ static CGFloat const kTOSegmentedControlDirectionArrowMargin = 2.0f;
 // -----------------------------------------------
 // Background Color
 
-- (void)setBackgroundColor:(UIColor *)backgroundColor
-{
+- (void)setBackgroundColor:(UIColor *)backgroundColor {
     [super setBackgroundColor:[UIColor clearColor]];
     _trackView.backgroundColor = backgroundColor;
 
@@ -1246,13 +1159,15 @@ static CGFloat const kTOSegmentedControlDirectionArrowMargin = 2.0f;
     backgroundColor = [UIColor colorWithRed:0.0f green:0.0f blue:0.08f alpha:0.06666f];
     _trackView.backgroundColor = backgroundColor;
 }
-- (UIColor *)backgroundColor { return self.trackView.backgroundColor; }
+
+- (UIColor *)backgroundColor {
+    return self.trackView.backgroundColor;
+}
 
 // -----------------------------------------------
 // Separator Color
 
-- (void)setSeparatorColor:(UIColor *)separatorColor
-{
+- (void)setSeparatorColor:(UIColor *)separatorColor {
     _separatorColor = separatorColor;
     if (_separatorColor == nil) {
         // Set the default color for iOS 12 and below
@@ -1269,8 +1184,7 @@ static CGFloat const kTOSegmentedControlDirectionArrowMargin = 2.0f;
 // -----------------------------------------------
 // Item Color
 
-- (void)setItemColor:(UIColor *)itemColor
-{
+- (void)setItemColor:(UIColor *)itemColor {
     _itemColor = itemColor;
     if (_itemColor == nil) {
         _itemColor = [UIColor blackColor];
@@ -1285,8 +1199,7 @@ static CGFloat const kTOSegmentedControlDirectionArrowMargin = 2.0f;
 //-------------------------------------------------
 // Selected Item Color
 
-- (void)setSelectedItemColor:(UIColor *)selectedItemColor
-{
+- (void)setSelectedItemColor:(UIColor *)selectedItemColor {
     _selectedItemColor = selectedItemColor;
     if (_selectedItemColor == nil) {
         _selectedItemColor = [UIColor blackColor];
@@ -1301,8 +1214,7 @@ static CGFloat const kTOSegmentedControlDirectionArrowMargin = 2.0f;
 // -----------------------------------------------
 // Text Font
 
-- (void)setTextFont:(UIFont *)textFont
-{
+- (void)setTextFont:(UIFont *)textFont {
     _textFont = textFont;
     if (_textFont == nil) {
         _textFont = [UIFont systemFontOfSize:13.0f weight:UIFontWeightMedium];
@@ -1317,8 +1229,7 @@ static CGFloat const kTOSegmentedControlDirectionArrowMargin = 2.0f;
 // -----------------------------------------------
 // Selected Text Font
 
-- (void)setSelectedTextFont:(UIFont *)selectedTextFont
-{
+- (void)setSelectedTextFont:(UIFont *)selectedTextFont {
     _selectedTextFont = selectedTextFont;
     if (_selectedTextFont == nil) {
         _selectedTextFont = [UIFont systemFontOfSize:13.0f weight:UIFontWeightSemibold];
@@ -1333,8 +1244,7 @@ static CGFloat const kTOSegmentedControlDirectionArrowMargin = 2.0f;
 // -----------------------------------------------
 // Thumb Inset
 
-- (void)setThumbInset:(CGFloat)thumbInset
-{
+- (void)setThumbInset:(CGFloat)thumbInset {
     _thumbInset = thumbInset;
     self.thumbView.layer.cornerRadius = (self.cornerRadius - _thumbInset) + 1.0f;
 }
@@ -1342,32 +1252,47 @@ static CGFloat const kTOSegmentedControlDirectionArrowMargin = 2.0f;
 // -----------------------------------------------
 // Shadow Properties
 
-- (void)setThumbShadowOffset:(CGFloat)thumbShadowOffset {self.thumbView.layer.shadowOffset = (CGSize){0.0f, thumbShadowOffset}; }
-- (CGFloat)thumbShadowOffset { return self.thumbView.layer.shadowOffset.height; }
+- (void)setThumbShadowOffset:(CGFloat)thumbShadowOffset {
+    self.thumbView.layer.shadowOffset = (CGSize){0.0f, thumbShadowOffset};
+}
 
-- (void)setThumbShadowOpacity:(CGFloat)thumbShadowOpacity { self.thumbView.layer.shadowOpacity = thumbShadowOpacity; }
-- (CGFloat)thumbShadowOpacity { return self.thumbView.layer.shadowOpacity; }
+- (CGFloat)thumbShadowOffset {
+    return self.thumbView.layer.shadowOffset.height;
+}
 
-- (void)setThumbShadowRadius:(CGFloat)thumbShadowRadius { self.thumbView.layer.shadowRadius = thumbShadowRadius; }
-- (CGFloat)thumbShadowRadius { return self.thumbView.layer.shadowRadius; }
+- (void)setThumbShadowOpacity:(CGFloat)thumbShadowOpacity {
+    self.thumbView.layer.shadowOpacity = thumbShadowOpacity;
+}
+
+- (CGFloat)thumbShadowOpacity {
+    return self.thumbView.layer.shadowOpacity;
+}
+
+- (void)setThumbShadowRadius:(CGFloat)thumbShadowRadius {
+    self.thumbView.layer.shadowRadius = thumbShadowRadius;
+}
+
+- (CGFloat)thumbShadowRadius {
+    return self.thumbView.layer.shadowRadius;
+}
 
 // -----------------------------------------------
 // Number of segments
 
-- (NSInteger)numberOfSegments { return self.segments.count; }
+- (NSInteger)numberOfSegments {
+    return self.segments.count;
+}
 
 // -----------------------------------------------
 // Setting all reversible indexes
-- (void)setReversibleSegmentIndexes:(NSArray<NSNumber *> *)reversibleSegmentIndexes
-{
+- (void)setReversibleSegmentIndexes:(NSArray<NSNumber *> *)reversibleSegmentIndexes {
     for (NSInteger i = 0; i < self.numberOfSegments; i++) {
         BOOL reversible = [reversibleSegmentIndexes indexOfObject:@(i)] != NSNotFound;
         [self setReversible:reversible forSegmentAtIndex:i];
     }
 }
 
-- (NSArray<NSNumber *> *)reversibleSegmentIndexes
-{
+- (NSArray<NSNumber *> *)reversibleSegmentIndexes {
     NSMutableArray *array = [NSMutableArray array];
     for (NSInteger i = 0; i < self.numberOfSegments; i++) {
         if ([self isReversibleForSegmentAtIndex:i]) {
@@ -1382,8 +1307,7 @@ static CGFloat const kTOSegmentedControlDirectionArrowMargin = 2.0f;
 
 #pragma mark - Image Creation and Management -
 
-- (UIImage *)arrowImage
-{
+- (UIImage *)arrowImage {
     // Retrieve from the image table
     UIImage *arrowImage = [self.imageTable objectForKey:kTOSegmentedControlArrowImage];
     if (arrowImage != nil) { return arrowImage; }
@@ -1413,8 +1337,7 @@ static CGFloat const kTOSegmentedControlDirectionArrowMargin = 2.0f;
     return arrowImage;
 }
 
-- (UIImage *)separatorImage
-{
+- (UIImage *)separatorImage {
     UIImage *separatorImage = [self.imageTable objectForKey:kTOSegmentedControlSeparatorImage];
     if (separatorImage != nil) { return separatorImage; }
 
@@ -1435,8 +1358,7 @@ static CGFloat const kTOSegmentedControlDirectionArrowMargin = 2.0f;
     return separatorImage;
 }
 
-- (NSMapTable *)imageTable
-{
+- (NSMapTable *)imageTable {
     // The map table is a global instance that allows all instances of
     // segmented controls to efficiently share the same images.
 

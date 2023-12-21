@@ -29,6 +29,7 @@
  */
 NS_SWIFT_NAME(InsetGroupedTableView)
 @interface TOInsetGroupedTableView : UITableView
-@property (nonatomic, assign) BOOL toggleDarkMode;
+@property (nonatomic, assign) BOOL isDarkMode;
+- (instancetype)initWithFrame:(CGRect)frame isDarkMode:(BOOL)isDarkMode;
 @end
 

@@ -1,11 +1,15 @@
-#import "Headers/ColorFunctions.h"
-#import "Headers/Localization.h"
+#import <RemoteLog.h>
+//#import "Headers/ColorFunctions.h"
+//#import "Headers/Localization.h"
 #import "Headers/SponsorBlockSettingsController.h"
 #import "Headers/TOInsetGroupedTableView.h"
 #import "Headers/TOSegmentedControl.h"
-#import "Headers/YouTubeHeader/QTMIcon.h"
+#import "Headers/UtilityFunctions.h"
+
+//static NSBundle *tweakBundle = iSponsorBlockBundle();
 
 @implementation SponsorBlockTableCell
+
 - (void)colorPicker:(id)colorPicker didSelectColor:(UIColor *)color {
     self.colorWell.color = color;
     NSString *hexString = hexFromUIColor(color);
@@ -38,6 +42,7 @@
     //fixes the bottom of the color picker from getting cut off
     viewController.view.frame = CGRectMake(0, -50, viewController.view.frame.size.width, viewController.view.frame.size.height);
 }
+
 @end
 
 @interface SponsorBlockSettingsController (Private)
@@ -49,17 +54,27 @@
 - (void)viewDidLoad {
     [super viewDidLoad];
 
-    UIBarButtonItem *dismissButton;
-
-    NSBundle *tweakBundle = iSponsorBlockBundle();
-    UIImage *xmark = [UIImage imageWithContentsOfFile:[tweakBundle pathForResource:@"xmark" ofType:@"png"]];
-    dismissButton = [[UIBarButtonItem alloc] initWithImage:xmark
-                                                     style:UIBarButtonItemStylePlain
-                                                    target:self
-                                                    action:@selector(dismissButtonTapped:)];
-
-    dismissButton.tintColor = self.toggleDarkMode ? [UIColor whiteColor] : [UIColor blackColor];
+    UIBarButtonItem *dismissButton = [[UIBarButtonItem alloc] initWithImage:IMAGE(@"xmark") style:UIBarButtonItemStylePlain target:self action:@selector(dismissButtonTapped:)];
+    dismissButton.tintColor = [UIColor colorWithWhite:self.isDarkMode alpha:1];
     self.navigationItem.leftBarButtonItem = dismissButton;
+
+    // Thanks haoict || source: https://github.com/haoict/messenger-no-ads/blob/master/settingsview/MNASettingsViewController.m#L13-L38
+    self.navigationItem.titleView = [UIView new];
+    self.navigationItem.titleView.alpha = 0;
+
+    UILabel *titleLabel = [[UILabel alloc] initWithFrame:CGRectMake(0, 0, 117, 20)];
+    titleLabel.translatesAutoresizingMaskIntoConstraints = NO;
+    titleLabel.text = @"iSponsorBlock";
+    titleLabel.font = [UIFont boldSystemFontOfSize:17];
+    titleLabel.textColor = [UIColor colorWithWhite:self.isDarkMode alpha:1];
+
+    [self.navigationItem.titleView addSubview:titleLabel];
+    [NSLayoutConstraint activateConstraints:@[
+      [titleLabel.topAnchor constraintEqualToAnchor:self.navigationItem.titleView.topAnchor],
+      [titleLabel.leadingAnchor constraintEqualToAnchor:self.navigationItem.titleView.leadingAnchor],
+      [titleLabel.trailingAnchor constraintEqualToAnchor:self.navigationItem.titleView.trailingAnchor],
+      [titleLabel.bottomAnchor constraintEqualToAnchor:self.navigationItem.titleView.bottomAnchor],
+    ]];
 
     NSArray *paths = NSSearchPathForDirectoriesInDomains(NSDocumentDirectory, NSUserDomainMask, YES);
     NSString *documentsDirectory = [paths objectAtIndex:0];
@@ -67,12 +82,9 @@
     self.settings = [NSMutableDictionary dictionary];
     [self.settings addEntriesFromDictionary:[NSDictionary dictionaryWithContentsOfFile:self.settingsPath]];
 
-    //self.view.backgroundColor = UIColor.systemBackgroundColor;
-
     // Detects if device is an se gen 1 or not, crude fix for text getting cut off
-    //if ([UIScreen mainScreen].bounds.size.width > 320) {} // later
-    self.tableView = [[TOInsetGroupedTableView alloc] initWithFrame:self.view.frame];
-    self.tableView.toggleDarkMode = self.toggleDarkMode;
+    // If ([UIScreen mainScreen].bounds.size.width > 320) {} //TODO: support old device
+    self.tableView = [[TOInsetGroupedTableView alloc] initWithFrame:self.view.frame isDarkMode:self.isDarkMode];
 
     [self.view addSubview:self.tableView];
     self.tableView.translatesAutoresizingMaskIntoConstraints = NO;
@@ -81,21 +93,21 @@
     self.tableView.delegate = self;
     self.tableView.dataSource = self;
 
-    UIImageView *imageView = [[UIImageView alloc] initWithImage:[UIImage imageWithContentsOfFile:[tweakBundle pathForResource:@"LogoSponsorBlocker128px" ofType:@"png"]]];
-    UILabel *label = [[UILabel alloc] initWithFrame:CGRectMake(0, 0, 0, 0)];
+    UIImageView *imageView = [[UIImageView alloc] initWithImage:IMAGE(@"LogoSponsorBlocker128px")];
+
+    UILabel *label = [UILabel new];
     label.text = @"iSponsorBlock";
-    label.textColor = self.toggleDarkMode ? [UIColor whiteColor] : [UIColor blackColor];
     label.font = [UIFont boldSystemFontOfSize:48];
+    label.textColor = [UIColor colorWithWhite:self.isDarkMode alpha:1];
     self.tableView.tableHeaderView = [[UIView alloc] initWithFrame:CGRectMake(0, 0, 0, 200)];
+
     [self.tableView.tableHeaderView addSubview:imageView];
-    [self.tableView.tableHeaderView addSubview:label];
-
-    self.tweakTitle = label.text;
-
     imageView.translatesAutoresizingMaskIntoConstraints = NO;
-    label.translatesAutoresizingMaskIntoConstraints = NO;
     [imageView.centerXAnchor constraintEqualToAnchor:self.view.centerXAnchor].active = YES;
     [imageView.topAnchor constraintEqualToAnchor:self.tableView.tableHeaderView.topAnchor constant:5].active = YES;
+
+    [self.tableView.tableHeaderView addSubview:label];
+    label.translatesAutoresizingMaskIntoConstraints = NO;
     [label.centerXAnchor constraintEqualToAnchor:imageView.centerXAnchor].active = YES;
     [label.topAnchor constraintEqualToAnchor:imageView.bottomAnchor constant:5].active = YES;
 
@@ -104,25 +116,20 @@
     tap.cancelsTouchesInView = NO;
     [self.view addGestureRecognizer:tap];
 
-    self.sectionTitles = @[LOC(@"Sponsor"), LOC(@"Intermission/IntroAnimation"), LOC(@"Endcards/Credits"), LOC(@"InteractionReminder"), LOC(@"Unpaid/SelfPromotion"), LOC(@"Non-MusicSection"), LOC(@"SponsorBlockUserID"), LOC(@"SponsorBlockAPIInstance")];
+    self.sectionTitles = @[
+        LOC(@"Sponsor"), LOC(@"Intermission/IntroAnimation"), LOC(@"Endcards/Credits"), LOC(@"InteractionReminder"),
+        LOC(@"Unpaid/SelfPromotion"), LOC(@"Non-MusicSection"), LOC(@"SponsorBlockUserID"), LOC(@"SponsorBlockAPIInstance")
+    ];
 }
 
 // Add iSponsorBlock text to Navbar label if header text out of screen
 - (void)scrollViewDidScroll:(UIScrollView *)scrollView {
-    CGRect labelCellRect = [self.tableView rectForRowAtIndexPath:[NSIndexPath indexPathForRow:0 inSection:0]];
-    CGRect visibleRect = CGRectMake(self.tableView.contentOffset.x,
-                                    self.tableView.contentOffset.y + self.navigationController.navigationBar.frame.size.height,
-                                    self.tableView.bounds.size.width,
-                                    self.tableView.bounds.size.height - self.navigationController.navigationBar.frame.size.height);
-
-    if (!CGRectContainsRect(visibleRect, labelCellRect)) {
-        self.title = self.tweakTitle;
-        [UIView animateWithDuration:0.3 animations:^{
+    if (scrollView.contentOffset.y > 135) {
+        [UIView animateWithDuration:0.2 animations:^{
             self.navigationItem.titleView.alpha = 1.0;
         }];
     } else {
-        self.title = nil;
-        [UIView animateWithDuration:0.3 animations:^{
+        [UIView animateWithDuration:0.2 animations:^{
             self.navigationItem.titleView.alpha = 0.0;
         }];
     }
@@ -139,22 +146,18 @@
 }
 
 - (UITableViewCell *)tableView:(UITableView *)tableView cellForRowAtIndexPath:(NSIndexPath *)indexPath {
-    UITableViewCell *cell = [tableView dequeueReusableCellWithIdentifier:@"SponsorBlockCell"];
-    if (!cell) {
-        cell = [[UITableViewCell alloc] initWithStyle:UITableViewCellStyleDefault reuseIdentifier:@"SponsorBlocKCell"];
-        cell.textLabel.textColor = self.toggleDarkMode ? [UIColor whiteColor] : [UIColor blackColor];
-    }
-
     if (indexPath.section == 0) {
+        UITableViewCell *cell = [[UITableViewCell alloc] initWithStyle:UITableViewCellStyleDefault reuseIdentifier:@"SponsorBlocKCell"];
         cell.textLabel.text = LOC(@"Enabled");
-        cell.backgroundColor = self.toggleDarkMode ? colorWithHexString(@"#1C1C1E") : [UIColor whiteColor];
+        cell.textLabel.textColor = [UIColor colorWithWhite:self.isDarkMode alpha:1];
+        cell.backgroundColor = self.isDarkMode ? colorWithHexString(@"#1C1C1E") : [UIColor whiteColor];
+
         UISwitch *enabledSwitch = [[UISwitch alloc] initWithFrame:CGRectMake(0, 0, 51, 31)];
-        cell.accessoryView = enabledSwitch;
         [enabledSwitch addTarget:self action:@selector(enabledSwitchToggled:) forControlEvents:UIControlEventValueChanged];
+        cell.accessoryView = enabledSwitch;
         if ([self.settings valueForKey:@"enabled"]) {
             [enabledSwitch setOn:[[self.settings valueForKey:@"enabled"] boolValue] animated:NO];
-        }
-        else {
+        } else {
             [enabledSwitch setOn:YES animated:NO];
             [self enabledSwitchToggled:enabledSwitch];
         }
@@ -163,11 +166,13 @@
 
     if (indexPath.section <= 6) {
         SponsorBlockTableCell *tableCell = [[SponsorBlockTableCell alloc] initWithStyle:UITableViewCellStyleDefault reuseIdentifier:@"SponsorBlockCell2"];
-        tableCell.backgroundColor = self.toggleDarkMode ? colorWithHexString(@"#1C1C1E") : [UIColor whiteColor];
+        tableCell.backgroundColor = self.isDarkMode ? colorWithHexString(@"#1C1C1E") : [UIColor whiteColor];
+
+        TOSegmentedControl *segmentedControl = [[TOSegmentedControl alloc] initWithItems:@[
+            LOC(@"Disable"), LOC(@"AutoSkip"), LOC(@"ShowInSeekBar"), LOC(@"ManualSkip")
+        ] isDarkMode:self.isDarkMode];
 
         NSDictionary *categorySettings = [self.settings objectForKey:@"categorySettings"];
-        TOSegmentedControl *segmentedControl = [[TOSegmentedControl alloc] initWithItems:@[LOC(@"Disable"), LOC(@"AutoSkip"), LOC(@"ShowInSeekBar"), LOC(@"ManualSkip")] withDarkMode:self.toggleDarkMode];
-
         switch (indexPath.section) {
             case 1:
                 segmentedControl.selectedSegmentIndex = [[categorySettings objectForKey:@"sponsor"] intValue];
@@ -196,6 +201,7 @@
             default:
                 break;
         }
+
         if (indexPath.row == 0) {
             [segmentedControl addTarget:self action:@selector(categorySegmentSelected:) forControlEvents:UIControlEventValueChanged];
             segmentedControl.apportionsSegmentWidthsByContent = YES;
@@ -207,7 +213,7 @@
             [segmentedControl.widthAnchor constraintEqualToAnchor:tableCell.contentView.widthAnchor constant:-10].active = YES;
         } else {
             tableCell.textLabel.text = LOC(@"SetColorToShowInSeekBar");
-            tableCell.textLabel.textColor = self.toggleDarkMode ? [UIColor whiteColor] : [UIColor blackColor];
+            tableCell.textLabel.textColor = [UIColor colorWithWhite:self.isDarkMode alpha:1];
             tableCell.textLabel.adjustsFontSizeToFitWidth = YES;
             HBColorWell *colorWell = [[objc_getClass("HBColorWell") alloc] initWithFrame:CGRectMake(0, 0, 32, 32)];
             [colorWell addTarget:tableCell action:@selector(presentColorPicker:) forControlEvents:UIControlEventTouchUpInside];
@@ -219,60 +225,72 @@
         }
         return tableCell;
     }
+
     if (indexPath.section == 7) {
         UITableViewCell *textCell = [[UITableViewCell alloc] initWithStyle:1000 reuseIdentifier:@"SponsorBlockTextCell"];
-        textCell.backgroundColor = self.toggleDarkMode ? colorWithHexString(@"#1C1C1E") : [UIColor whiteColor];
+        textCell.backgroundColor = self.isDarkMode ? colorWithHexString(@"#1C1C1E") : [UIColor whiteColor];
         textCell.textLabel.text = LOC(@"UserID");
-        textCell.textLabel.textColor = self.toggleDarkMode ? [UIColor whiteColor] : [UIColor blackColor];
         textCell.textLabel.adjustsFontSizeToFitWidth = YES;
-        [textCell editableTextField].text = [self.settings valueForKey:@"userID"];
-        [textCell editableTextField].textColor = self.toggleDarkMode ? [UIColor whiteColor] : [UIColor blackColor];
+        textCell.textLabel.textColor = [UIColor colorWithWhite:self.isDarkMode alpha:1];
         [textCell editableTextField].delegate = self;
+        [textCell editableTextField].text = [self.settings valueForKey:@"userID"];
+        [textCell editableTextField].textColor = [UIColor colorWithWhite:self.isDarkMode alpha:1];
         return textCell;
     }
+
     if (indexPath.section == 8) {
         UITableViewCell *textCell = [[UITableViewCell alloc] initWithStyle:1000 reuseIdentifier:@"SponsorBlockTextCell"];
-        textCell.backgroundColor = self.toggleDarkMode ? colorWithHexString(@"#1C1C1E") : [UIColor whiteColor];
+        textCell.backgroundColor = self.isDarkMode ? colorWithHexString(@"#1C1C1E") : [UIColor whiteColor];
         textCell.textLabel.text = LOC(@"API_URL");
-        textCell.textLabel.textColor = self.toggleDarkMode ? [UIColor whiteColor] : [UIColor blackColor];
+        textCell.textLabel.textColor = [UIColor colorWithWhite:self.isDarkMode alpha:1];
         textCell.textLabel.adjustsFontSizeToFitWidth = YES;
         [textCell editableTextField].text = [self.settings valueForKey:@"apiInstance"];
-        [textCell editableTextField].textColor = self.toggleDarkMode ? [UIColor whiteColor] : [UIColor blackColor];
+        [textCell editableTextField].textColor = [UIColor colorWithWhite:self.isDarkMode alpha:1];
         [textCell editableTextField].delegate = self;
         return textCell;
     }
+
     if (indexPath.section == 9) {
         UITableViewCell *textCell = [[UITableViewCell alloc] initWithStyle:1000 reuseIdentifier:@"SponsorBlockTextCell"];
-        textCell.backgroundColor = self.toggleDarkMode ? colorWithHexString(@"#1C1C1E") : [UIColor whiteColor];
+        textCell.backgroundColor = self.isDarkMode ? colorWithHexString(@"#1C1C1E") : [UIColor whiteColor];
         textCell.textLabel.text = LOC(@"MinimumSegmentDuration");
-        textCell.textLabel.textColor = self.toggleDarkMode ? [UIColor whiteColor] : [UIColor blackColor];
+        textCell.textLabel.textColor = [UIColor colorWithWhite:self.isDarkMode alpha:1];
         textCell.textLabel.adjustsFontSizeToFitWidth = YES;
         [textCell editableTextField].text = [NSString stringWithFormat:@"%.1f", [[self.settings valueForKey:@"minimumDuration"] floatValue]];
-        [textCell editableTextField].textColor = self.toggleDarkMode ? [UIColor whiteColor] : [UIColor blackColor];
+        [textCell editableTextField].textColor = [UIColor colorWithWhite:self.isDarkMode alpha:1];
         [textCell editableTextField].keyboardType = UIKeyboardTypeDecimalPad;
         [textCell editableTextField].delegate = self;
         return textCell;
     }
+
     if (indexPath.section == 10) {
         UITableViewCell *textCell = [[UITableViewCell alloc] initWithStyle:1000 reuseIdentifier:@"SponsorBlockTextCell"];
-        textCell.backgroundColor = self.toggleDarkMode ? colorWithHexString(@"#1C1C1E") : [UIColor whiteColor];
+        textCell.backgroundColor = self.isDarkMode ? colorWithHexString(@"#1C1C1E") : [UIColor whiteColor];
         textCell.textLabel.text = LOC(@"HowLongNoticeWillAppear");
-        textCell.textLabel.textColor = self.toggleDarkMode ? [UIColor whiteColor] : [UIColor blackColor];
+        textCell.textLabel.textColor = [UIColor colorWithWhite:self.isDarkMode alpha:1];
         textCell.textLabel.adjustsFontSizeToFitWidth = YES;
         [textCell editableTextField].text = [NSString stringWithFormat:@"%.1f", [[self.settings valueForKey:@"skipNoticeDuration"] floatValue]];
-        [textCell editableTextField].textColor = self.toggleDarkMode ? [UIColor whiteColor] : [UIColor blackColor];
+        [textCell editableTextField].textColor = [UIColor colorWithWhite:self.isDarkMode alpha:1];
         [textCell editableTextField].keyboardType = UIKeyboardTypeDecimalPad;
         [textCell editableTextField].delegate = self;
         return textCell;
     }
+
     if (indexPath.section >= 11 && indexPath.section < 17) {
-        NSArray *titles = @[LOC(@"ShowSkipNotice"), LOC(@"ShowButtonsInPlayer"), LOC(@"HideStartEndButtonInPlayer"), LOC(@"ShowModifiedTime"), LOC(@"AudioNotificationOnSkip"), LOC(@"EnableSkipCountTracking")];
-        NSArray *titlesNames = @[@"showSkipNotice", @"showButtonsInPlayer", @"hideStartEndButtonInPlayer", @"showModifiedTime", @"skipAudioNotification", @"enableSkipCountTracking"];
+        NSArray *titles = @[
+            LOC(@"ShowSkipNotice"), LOC(@"ShowButtonsInPlayer"), LOC(@"HideStartEndButtonInPlayer"),
+            LOC(@"ShowModifiedTime"), LOC(@"AudioNotificationOnSkip"), LOC(@"EnableSkipCountTracking")
+        ];
+        NSArray *titlesNames = @[
+            @"showSkipNotice", @"showButtonsInPlayer", @"hideStartEndButtonInPlayer",
+            @"showModifiedTime", @"skipAudioNotification", @"enableSkipCountTracking"
+        ];
+
         UITableViewCell *tableCell = [[UITableViewCell alloc] initWithStyle:UITableViewCellStyleDefault reuseIdentifier:@"SponsorBlockCell3"];
-        tableCell.backgroundColor = self.toggleDarkMode ? colorWithHexString(@"#1C1C1E") : [UIColor whiteColor];
+        tableCell.backgroundColor = self.isDarkMode ? colorWithHexString(@"#1C1C1E") : [UIColor whiteColor];
 
         tableCell.textLabel.text = titles[indexPath.section - 11];
-        tableCell.textLabel.textColor = self.toggleDarkMode ? [UIColor whiteColor] : [UIColor blackColor];
+        tableCell.textLabel.textColor = [UIColor colorWithWhite:self.isDarkMode alpha:1];
         tableCell.textLabel.adjustsFontSizeToFitWidth = YES;
 
         UISwitch *toggleSwitch = [[UISwitch alloc] initWithFrame:CGRectMake(0, 0, 51, 31)];
@@ -286,13 +304,13 @@
         }
         return tableCell;
     }
+
     if (indexPath.section == 17) {
         UITableViewCell *cell = [[UITableViewCell alloc] initWithStyle:UITableViewCellStyleDefault reuseIdentifier:@"SponsorBlockDonationCell"];
-        cell.backgroundColor = self.toggleDarkMode ? colorWithHexString(@"#1C1C1E") : [UIColor whiteColor];
+        cell.backgroundColor = self.isDarkMode ? colorWithHexString(@"#1C1C1E") : [UIColor whiteColor];
         cell.textLabel.text = indexPath.row == 0 ? LOC(@"DonateOnVenmo") : LOC(@"DonateOnPayPal");
-        cell.textLabel.textColor = self.toggleDarkMode ? [UIColor whiteColor] : [UIColor blackColor];
-        NSBundle *tweakBundle = iSponsorBlockBundle();
-        cell.imageView.image = [UIImage imageWithContentsOfFile:[tweakBundle pathForResource:@"dollarsign.circle.fill" ofType:@"png"]];
+        cell.textLabel.textColor = [UIColor colorWithWhite:self.isDarkMode alpha:1];
+        cell.imageView.image = IMAGE(@"dollarsign.circle.fill");
         return cell;
     }
     return nil;
@@ -314,11 +332,7 @@
 
 // To allow highlights only for certain sections
 - (BOOL)tableView:(UITableView *)tableView shouldHighlightRowAtIndexPath:(NSIndexPath *)indexPath {
-    if (indexPath.section == 17) {
-        return YES;
-    } else {
-        return NO;
-    }
+    return indexPath.section == 17;
 }
 
 - (void)dismissButtonTapped:(id)sender {
@@ -346,8 +360,12 @@
 }
 
 - (void)switchToggled:(UISwitch *)sender {
+    NSArray *titlesNames = @[
+        @"showSkipNotice", @"showButtonsInPlayer", @"hideStartEndButtonInPlayer",
+        @"showModifiedTime", @"skipAudioNotification", @"enableSkipCountTracking"
+    ];
+
     UITableViewCell *cell = (UITableViewCell *)sender.superview;
-    NSArray *titlesNames = @[@"showSkipNotice", @"showButtonsInPlayer", @"hideStartEndButtonInPlayer", @"showModifiedTime", @"skipAudioNotification", @"enableSkipCountTracking"];
     NSIndexPath *indexPath = [self.tableView indexPathForCell:cell];
     [self.settings setValue:@(sender.on) forKey:titlesNames[indexPath.section - 11]];
     [self writeSettings];

@@ -1,6 +1,5 @@
 #import "Headers/SponsorSegmentView.h"
-#import "Headers/Localization.h"
-#import "Headers/ColorFunctions.h"
+#import "Headers/UtilityFunctions.h"
 
 @implementation SponsorSegmentView
 - (instancetype)initWithFrame:(CGRect)frame sponsorSegment:(SponsorSegment *)segment editable:(BOOL)editable {

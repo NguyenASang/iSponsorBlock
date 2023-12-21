@@ -1,5 +1,5 @@
 #import "Headers/SponsorBlockRequest.h"
-#import "Headers/Localization.h"
+#import "Headers/UtilityFunctions.h"
 
 @implementation SponsorBlockRequest
 + (void)getSponsorTimes:(NSString *)videoID completionTarget:(id)target completionSelector:(SEL)sel apiInstance:(NSString *)apiInstance {

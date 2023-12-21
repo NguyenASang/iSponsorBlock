@@ -22,8 +22,8 @@
 //
 //  This is a modified version by NguyenASang that only supports iOS 12
 
-#import "Headers/ColorFunctions.h"
 #import "Headers/TOInsetGroupedTableView.h"
+#import "Headers/UtilityFunctions.h"
 
 /**
  The KVO key we'll be using to detect when the table view
@@ -52,8 +52,8 @@ static CGFloat const kTOInsetGroupedTableViewCornerRadius = 10.0f;
 
 #pragma mark - View Life-cycle -
 
-- (instancetype)initWithFrame:(CGRect)frame {
-    // On iOS 12 and below, make sure we explicitly force the grouped style
+- (instancetype)initWithFrame:(CGRect)frame isDarkMode:(BOOL)isDarkMode {
+    self.isDarkMode = isDarkMode;
     if (self = [super initWithFrame:frame style:UITableViewStyleGrouped]) {
         [self commonInit];
     }
@@ -79,7 +79,7 @@ static CGFloat const kTOInsetGroupedTableViewCornerRadius = 10.0f;
 - (void)didAddSubview:(UIView *)subview {
     [super didAddSubview:subview];
 
-    self.backgroundColor = self.toggleDarkMode ? [UIColor blackColor] : colorWithHexString(@"EFEFF4");
+    self.backgroundColor = self.isDarkMode ? [UIColor blackColor] : colorWithHexString(@"EFEFF4");
 
     // If it's not a section header/footer view, or a table cell, ignore it
     if (![subview isKindOfClass:[UITableViewHeaderFooterView class]] && ![subview isKindOfClass:[UITableViewCell class]]) {
@@ -109,7 +109,7 @@ static CGFloat const kTOInsetGroupedTableViewCornerRadius = 10.0f;
 }
 
 - (UIColor *)separatorColor {
-    return self.toggleDarkMode ? colorWithHexString(@"#3A3A3C") : colorWithHexString(@"#C7C7CC");
+    return self.isDarkMode ? colorWithHexString(@"#3A3A3C") : colorWithHexString(@"#C7C7CC");
 }
 
 #pragma mark - Observer Life-cycle -

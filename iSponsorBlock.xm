@@ -2,34 +2,16 @@
 #import <AudioToolbox/AudioToolbox.h>
 #import <RemoteLog.h>
 #import "Headers/iSponsorBlock.h"
-#import "Headers/ColorFunctions.h"
 #import "Headers/SponsorBlockRequest.h"
 #import "Headers/SponsorBlockSettingsController.h"
 #import "Headers/SponsorBlockViewController.h"
+#import "Headers/UtilityFunctions.h"
 #import "Headers/YouTubeHeader/QTMIcon.h"
 #import "Headers/YouTubeHeader/YTQTMButton.h"
 
-#define LOC(x) [tweakBundle localizedStringForKey:x value:nil table:nil]
-
-extern "C" NSBundle *iSponsorBlockBundle() {
-    static NSBundle *bundle = nil;
-    static dispatch_once_t onceToken;
-	dispatch_once(&onceToken, ^{
-        NSString *tweakBundlePath = [[NSBundle mainBundle] pathForResource:@"iSponsorBlock" ofType:@"bundle"];
-        if (tweakBundlePath)
-            bundle = [NSBundle bundleWithPath:tweakBundlePath];
-        else
-            bundle = [NSBundle bundleWithPath:ROOT_PATH_NS("/Library/Application Support/iSponsorBlock.bundle")];
-    });
-    return bundle;
-}
-
-NSBundle *tweakBundle = iSponsorBlockBundle();
-
 // Sound effect for skip segments
 static void playSponsorAudio() {
-    NSString *audioFilePath = [tweakBundle pathForResource:@"SponsorAudio" ofType:@"m4a"];
-    NSURL *audioFileURL = [NSURL fileURLWithPath:audioFilePath];
+    NSURL *audioFileURL = [NSURL fileURLWithPath:FILEPATH(@"SponsorAudio", @"m4a")];
     SystemSoundID soundID;
     AudioServicesCreateSystemSoundID((__bridge CFURLRef)audioFileURL, &soundID);
     AudioServicesPlaySystemSound(soundID);
@@ -101,8 +83,7 @@ NSString *modifiedTimeString;
 
                     // Add custom button to hide HUD
                     UIButton *cancelButton = [UIButton buttonWithType:UIButtonTypeSystem];
-                    UIImage *cancelImage = [%c(QTMIcon) tintImage:[UIImage imageWithContentsOfFile:[tweakBundle pathForResource:@"x.circle" ofType:@"png"]]
-                                                            color:[[UIColor blackColor] colorWithAlphaComponent:0.7]];
+                    UIImage *cancelImage = [%c(QTMIcon) tintImage:IMAGE(@"x.circle") color:[[UIColor blackColor] colorWithAlphaComponent:0.7]];
                     [cancelButton setImage:cancelImage forState:UIControlStateNormal];
                     [cancelButton addTarget:self action:@selector(cancelHUD:) forControlEvents:UIControlEventTouchUpInside];
 
@@ -350,15 +331,16 @@ NSString *modifiedTimeString;
     self = %orig;
     if (kShowButtonsInPlayer) {
         CGFloat padding = [[self class] topButtonAdditionalPadding];
-        self.sponsorBlockButton = [self buttonWithImage:[UIImage imageWithContentsOfFile:[tweakBundle pathForResource:@"PlayerInfoIconSponsorBlocker256px-20@2x" ofType:@"png"]] accessibilityLabel:@"iSponsorBlock" verticalContentPadding:padding];
+        self.sponsorBlockButton = [self buttonWithImage:IMAGE(@"PlayerInfoIconSponsorBlocker256px-20@2x") accessibilityLabel:@"iSponsorBlock" verticalContentPadding:padding];
         [self.sponsorBlockButton addTarget:self action:@selector(sponsorBlockButtonPressed:) forControlEvents:UIControlEventTouchUpInside];
         self.sponsorBlockButton.hidden = YES;
         self.sponsorBlockButton.alpha = 0;
 
         if (!kHideStartEndButtonInPlayer) {
             BOOL isStart = self.playerViewController.userSkipSegments.lastObject.endTime != -1;
-            NSString *startedEndedImagePath = isStart ? [tweakBundle pathForResource:@"sponsorblockstart-20@2x" ofType:@"png"] : [tweakBundle pathForResource:@"sponsorblockend-20@2x" ofType:@"png"];
-            self.sponsorStartedEndedButton = [self buttonWithImage:[UIImage imageWithContentsOfFile:startedEndedImagePath] accessibilityLabel:isStart ? @"iSponsorBlock start" : @"iSponsorBlock end" verticalContentPadding:padding];
+            NSString *imageLabel = isStart ? @"iSponsorBlock start" : @"iSponsorBlock end";
+            UIImage *startedEndedImage = isStart ? IMAGE(@"sponsorblockstart-20@2x") : IMAGE(@"sponsorblockend-20@2x");
+            self.sponsorStartedEndedButton = [self buttonWithImage:startedEndedImage accessibilityLabel:imageLabel verticalContentPadding:padding];
             [self.sponsorStartedEndedButton addTarget:self action:@selector(sponsorStartedEndedButtonPressed:) forControlEvents:UIControlEventTouchUpInside];
             self.sponsorStartedEndedButton.hidden = YES;
             self.sponsorStartedEndedButton.alpha = 0;
@@ -417,7 +399,7 @@ NSString *modifiedTimeString;
 - (void)sponsorStartedEndedButtonPressed:(YTQTMButton *)sender {
     if (self.playerViewController.userSkipSegments.lastObject.endTime != -1) {
         [self.playerViewController.userSkipSegments addObject:[[SponsorSegment alloc] initWithStartTime:self.playerViewController.currentVideoMediaTime endTime:-1 category:nil UUID:nil]];
-        [self.sponsorStartedEndedButton setImage:[UIImage imageWithContentsOfFile:[tweakBundle pathForResource:@"sponsorblockend-20@2x" ofType:@"png"]] forState:UIControlStateNormal];
+        [self.sponsorStartedEndedButton setImage:IMAGE(@"sponsorblockend-20@2x") forState:UIControlStateNormal];
     } else {
         self.playerViewController.userSkipSegments.lastObject.endTime = self.playerViewController.currentVideoMediaTime;
         if (self.playerViewController.userSkipSegments.lastObject.endTime != self.playerViewController.currentVideoMediaTime) {
@@ -431,7 +413,7 @@ NSString *modifiedTimeString;
             [[[UIApplication sharedApplication] delegate].window.rootViewController presentViewController:alert animated:YES completion:nil];
             return;
         }
-        [self.sponsorStartedEndedButton setImage:[UIImage imageWithContentsOfFile:[tweakBundle pathForResource:@"sponsorblockstart-20@2x" ofType:@"png"]] forState:UIControlStateNormal];
+        [self.sponsorStartedEndedButton setImage:IMAGE(@"sponsorblockstart-20@2x") forState:UIControlStateNormal];
     }
 }
 
@@ -822,10 +804,7 @@ AVQueuePlayer *queuePlayer;
                         [weakSelf.hud.button addTarget:weakSelf action:@selector(manuallySkipSegment:) forControlEvents:UIControlEventTouchUpInside];
                         // Add custom button to hide HUD
                         UIButton *cancelButton = [UIButton buttonWithType:UIButtonTypeSystem];
-                        //UIImage *cancelImage = [[UIImage systemImageNamed:@"x.circle"] imageWithRenderingMode:UIImageRenderingModeAlwaysTemplate];
-                        //[cancelButton setTintColor:[[UIColor blackColor] colorWithAlphaComponent:0.7]];
-                        UIImage *cancelImage = [%c(QTMIcon) tintImage:[UIImage imageWithContentsOfFile:[tweakBundle pathForResource:@"x.circle" ofType:@"png"]]
-                                                                color:[[UIColor blackColor] colorWithAlphaComponent:0.7]];
+                        UIImage *cancelImage = [%c(QTMIcon) tintImage:IMAGE(@"x.circle") color:[[UIColor blackColor] colorWithAlphaComponent:0.7]];
                         [cancelButton setImage:cancelImage forState:UIControlStateNormal];
                         [cancelButton addTarget:weakSelf action:@selector(cancelHUD:) forControlEvents:UIControlEventTouchUpInside];
 
@@ -924,13 +903,8 @@ NSInteger pageStyle = 0;
     if (!self.sponsorBlockButton || pageStyle != [%c(YTPageStyleController) pageStyle]) {
         pageStyle = [%c(YTPageStyleController) pageStyle];
 
-        UIImage *image = [UIImage imageWithContentsOfFile:[tweakBundle pathForResource:@"sponsorblocksettings-20@2x" ofType:@"png"]];
-        if ([%c(YTPageStyleController) pageStyle]) { // Dark mode
-            image = [%c(QTMIcon) tintImage:image color:[UIColor whiteColor]];
-        } else { // Light mode
-            image = [%c(QTMIcon) tintImage:image color:[UIColor blackColor]];
-        }
-        self.sponsorBlockButton = [%c(YTQTMButton) barButtonWithImage:image accessibilityLabel:nil accessibilityIdentifier:nil];
+        UIImage *tintImage = [%c(QTMIcon) tintImage:IMAGE(@"sponsorblocksettings-20@2x") color:[UIColor colorWithWhite:pageStyle alpha:1]];
+        self.sponsorBlockButton = [%c(YTQTMButton) barButtonWithImage:tintImage accessibilityLabel:@"iSponsorBlock settings" accessibilityIdentifier:nil];
         [self.sponsorBlockButton setFrame:CGRectMake(0, 0, 40, 40)];
         [self.sponsorBlockButton enableNewTouchFeedback];
 
@@ -956,9 +930,11 @@ NSInteger pageStyle = 0;
 %new
 - (void)sponsorBlockButtonPressed:(UIButton *)sender {
     SponsorBlockSettingsController *settingsController = [[SponsorBlockSettingsController alloc] init];
-    settingsController.toggleDarkMode = pageStyle;
     UINavigationController *navigationController = [[UINavigationController alloc] initWithRootViewController:settingsController];
-    if (pageStyle) navigationController.navigationBar.backgroundEffects = @[[UIBlurEffect effectWithStyle:UIBlurEffectStyleDark]];
+    if (pageStyle) {
+        navigationController.navigationBar.backgroundEffects = @[[UIBlurEffect effectWithStyle:UIBlurEffectStyleDark]];
+        settingsController.isDarkMode = pageStyle;
+    }
     [[[UIApplication sharedApplication] delegate].window.rootViewController presentViewController:navigationController animated:YES completion:nil];
 }
 
