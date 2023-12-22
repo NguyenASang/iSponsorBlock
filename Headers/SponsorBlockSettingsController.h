@@ -7,17 +7,12 @@
 @optional - (void)colorPicker:(id)colorPicker didSelectColor:(UIColor *)color;
 @end
 
-@interface UITableViewCell ()
-- (void)_setSeparatorEffect:(id)arg1;
-@end
-
 @interface UIView ()
 - (UIViewController *)_viewControllerForAncestor;
 @end
 
 @interface UITableViewCell ()
 - (UITextField *)editableTextField;
-- (id)_indexPath;
 @end
 
 @interface UISegment : UIView
@@ -28,8 +23,8 @@
 @end
 
 @interface HBColorPickerViewController : UIViewController
-@property (strong, nonatomic) NSObject <HBColorPickerDelegate> *delegate;
 @property (strong, nonatomic) HBColorPickerConfiguration *configuration;
+@property (strong, nonatomic) NSObject <HBColorPickerDelegate> *delegate;
 @end
 
 @interface HBColorWell : UIControl
@@ -39,9 +34,9 @@
 @end
 
 @interface SponsorBlockTableCell : UITableViewCell <HBColorPickerDelegate>
+@property (strong, nonatomic) HBColorWell *colorWell;
 @property (strong, nonatomic) NSString *category;
 @property (strong, nonatomic) UIColor *color;
-@property (strong, nonatomic) HBColorWell *colorWell;
 @end
 
 @interface SponsorBlockSettingsController : UIViewController <UITableViewDelegate, UITableViewDataSource, UITextFieldDelegate>

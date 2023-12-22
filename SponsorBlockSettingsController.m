@@ -1,12 +1,7 @@
-#import <RemoteLog.h>
-//#import "Headers/ColorFunctions.h"
-//#import "Headers/Localization.h"
 #import "Headers/SponsorBlockSettingsController.h"
 #import "Headers/TOInsetGroupedTableView.h"
 #import "Headers/TOSegmentedControl.h"
 #import "Headers/UtilityFunctions.h"
-
-//static NSBundle *tweakBundle = iSponsorBlockBundle();
 
 @implementation SponsorBlockTableCell
 

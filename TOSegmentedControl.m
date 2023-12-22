@@ -1,24 +1,6 @@
-//
-//  TOSegmentedControl.m
-//
-//  Copyright 2019-2022 Timothy Oliver. All rights reserved.
-//
-//  Permission is hereby granted, free of charge, to any person obtaining a copy
-//  of this software and associated documentation files (the "Software"), to
-//  deal in the Software without restriction, including without limitation the
-//  rights to use, copy, modify, merge, publish, distribute, sublicense, and/or
-//  sell copies of the Software, and to permit persons to whom the Software is
-//  furnished to do so, subject to the following conditions:
-//
-//  The above copyright notice and this permission notice shall be included in
-//  all copies or substantial portions of the Software.
-//
-//  THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS
-//  OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
-//  FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
-//  AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY,
-//  WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR
-//  IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
+// An iOS 12 back-port of the segmented control style in iOS 13.
+// Author: Timothy Oliver
+// Maintainer: NguyenASang
 
 #include <RemoteLog.h>
 #import "Headers/TOSegmentedControl.h"
@@ -54,20 +36,17 @@ static NSMutableDictionary *calculateSegmentWidth(NSMutableDictionary *segments,
 static NSMapTable *_imageTable = nil;
 
 // Statically referenced key names for the images stored in the map table.
-static NSString * const kTOSegmentedControlArrowImage = @"arrowIcon";
 static NSString * const kTOSegmentedControlSeparatorImage = @"separatorImage";
 
 // When tapped the amount the focused elements will shrink / fade
 static CGFloat const kTOSegmentedControlSelectedTextAlpha = 0.3f;
 static CGFloat const kTOSegmentedControlDisabledAlpha = 0.4f;
 static CGFloat const kTOSegmentedControlSelectedScale = 0.95f;
-static CGFloat const kTOSegmentedControlDirectionArrowAlpha = 0.4f;
-static CGFloat const kTOSegmentedControlDirectionArrowMargin = 2.0f;
 
 // ----------------------------------------------------------------
 // Private Members
 
-@interface TOSegmentedControl () <UIPointerInteractionDelegate>
+@interface TOSegmentedControl ()
 
 /** The private list of item objects, storing state and view data */
 @property (nonatomic, strong) NSMutableArray<TOSegmentedControlSegment *> *segments;
@@ -93,23 +72,14 @@ static CGFloat const kTOSegmentedControlDirectionArrowMargin = 2.0f;
 /** A weakly retained image table that holds cached images for us. */
 @property (nonatomic, readonly) NSMapTable *imageTable;
 
-/** An arrow icon used to denote when a view is reversible. */
-@property (nonatomic, readonly) UIImage *arrowImage;
-
 /** A rounded line used as the separator line. */
 @property (nonatomic, readonly) UIImage *separatorImage;
 
 /** Convenience property for testing if there are no segments */
 @property (nonatomic, readonly) BOOL hasNoSegments;
 
-/**  Store width of segments */
+/** Store width of segments */
 @property (nonatomic, strong) NSMutableDictionary *widthOfItems;
-
-/** Pointer interaction for mice interactions */
-#pragma clang diagnostic push
-#pragma clang diagnostic ignored "-Weverything"
-@property (nonatomic, strong) UIPointerInteraction *pointerInteraction;
-#pragma clang diagnostic pop
 
 @end
 
@@ -151,8 +121,8 @@ static CGFloat const kTOSegmentedControlDirectionArrowMargin = 2.0f;
     self.separatorColor = self.isDarkMode ? [UIColor colorWithRed:0.918f green:0.918f blue:1.0f alpha:0.16f] : [UIColor colorWithRed:0.0f green:0.0f blue:0.08f alpha:0.1f];
     self.itemColor = self.isDarkMode ? [UIColor whiteColor] : [UIColor blackColor];
     self.selectedItemColor = self.isDarkMode ? [UIColor whiteColor] : [UIColor blackColor];
-    self.textFont = nil;
-    self.selectedTextFont = nil;
+    self.textFont = [UIFont systemFontOfSize:13.0f weight:UIFontWeightMedium];
+    self.selectedTextFont = [UIFont systemFontOfSize:13.0f weight:UIFontWeightSemibold];
 
     // Set default values
     self.selectedSegmentIndex = -1;
@@ -230,156 +200,7 @@ static CGFloat const kTOSegmentedControlDirectionArrowMargin = 2.0f;
     }
 }
 
-#pragma mark - Public Item Access -
-
-- (nullable UIImage *)imageForSegmentAtIndex:(NSInteger)index {
-    if (index < 0 || index >= self.segments.count) { return nil; }
-    return [self objectForSegmentAtIndex:index class:UIImage.class];
-}
-
-- (nullable NSString *)titleForSegmentAtIndex:(NSInteger)index {
-    return [self objectForSegmentAtIndex:index class:NSString.class];
-}
-
-- (nullable id)objectForSegmentAtIndex:(NSInteger)index class:(Class)class {
-    // Make sure the index provided is valid
-    if (index < 0 || index >= self.items.count) { return nil; }
-
-    // Return the item only if it is an image
-    id item = self.items[index];
-    if ([item isKindOfClass:class]) { return item; }
-
-    // Return nil if a label or anything else
-    return nil;
-}
-
-#pragma mark Add New Items
-
-- (void)addSegmentWithImage:(UIImage *)image {
-    [self addSegmentWithImage:image reversible:NO];
-}
-
-- (void)addSegmentWithImage:(UIImage *)image reversible:(BOOL)reversible {
-    [self addSegmentWithObject:image reversible:reversible];
-}
-
-- (void)addSegmentWithTitle:(NSString *)title {
-    [self addSegmentWithTitle:title reversible:NO];
-}
-
-- (void)addSegmentWithTitle:(NSString *)title reversible:(BOOL)reversible {
-    [self addSegmentWithObject:title reversible:reversible];
-}
-
-- (void)addSegmentWithObject:(id)object reversible:(BOOL)reversible {
-    [self insertSegmentWithObject:object reversible:reversible atIndex:self.segments.count];
-}
-
-#pragma mark Inserting New Items
-
-- (void)insertSegmentWithTitle:(NSString *)title atIndex:(NSInteger)index {
-    [self insertSegmentWithTitle:title reversible:NO atIndex:index];
-}
-
-- (void)insertSegmentWithTitle:(NSString *)title reversible:(BOOL)reversible atIndex:(NSInteger)index {
-    [self insertSegmentWithObject:title reversible:reversible atIndex:index];
-}
-
-- (void)insertSegmentWithImage:(UIImage *)image atIndex:(NSInteger)index {
-    [self insertSegmentWithImage:image reversible:NO atIndex:index];
-}
-
-- (void)insertSegmentWithImage:(UIImage *)image reversible:(BOOL)reversible atIndex:(NSInteger)index {
-    [self insertSegmentWithObject:image reversible:reversible atIndex:index];
-}
-
-- (void)insertSegmentWithObject:(id)object reversible:(BOOL)reversible atIndex:(NSInteger)index {
-    // If an invalid index was provided, cap it to the available range
-    if (index < 0) { index = 0; }
-    if (index >= self.segments.count) { index = self.segments.count; }
-
-    // Add item to master list (Create a new list if one didn't exist)
-    NSMutableArray *items = nil;
-    if (self.items) { items = [self.items mutableCopy]; }
-    else { items = [NSMutableArray array]; }
-    [items insertObject:object atIndex:index];
-    _items = [NSArray arrayWithArray:items];
-
-    // Add new item object to internal list
-    TOSegmentedControlSegment *segment = [[TOSegmentedControlSegment alloc] initWithObject:object
-                                                                       forSegmentedControl:self];
-    segment.isReversible = reversible;
-    [self.segments insertObject:segment atIndex:index];
-
-    // Update number of separators
-    [self updateSeparatorViewCount];
-
-    // Perform new layout update
-    [self setNeedsLayout];
-}
-
-#pragma mark Replacing Items
-
-- (void)setImage:(UIImage *)image forSegmentAtIndex:(NSInteger)index {
-    [self setImage:image reversible:NO forSegmentAtIndex:index];
-}
-
-- (void)setImage:(UIImage *)image reversible:(BOOL)reversible forSegmentAtIndex:(NSInteger)index {
-    [self setObject:image reversible:reversible forSegmentAtIndex:index];
-}
-
-- (void)setTitle:(NSString *)title forSegmentAtIndex:(NSInteger)index {
-    [self setTitle:title reversible:NO forSegmentAtIndex:index];
-}
-
-- (void)setTitle:(NSString *)title reversible:(BOOL)reversible forSegmentAtIndex:(NSInteger)index {
-    [self setObject:title reversible:reversible forSegmentAtIndex:index];
-}
-
-- (void)setObject:(id)object reversible:(BOOL)reversible forSegmentAtIndex:(NSInteger)index {
-    NSAssert([object isKindOfClass:NSString.class] || [object isKindOfClass:UIImage.class],
-                @"TOSegmentedControl: Only images and strings are supported.");
-
-    // Make sure we don't go out of bounds
-    if (index < 0 || index >= self.items.count) { return; }
-
-    // Remove the item from the item list and insert the new one
-    NSMutableArray *items = [self.items mutableCopy];
-    [items removeObjectAtIndex:index];
-    [items insertObject:object atIndex:index];
-    _items = [NSArray arrayWithArray:items];
-
-    // Update the item object at that point for the new item
-    TOSegmentedControlSegment *segment = self.segments[index];
-    if ([object isKindOfClass:NSString.class]) { segment.title = object; }
-    if ([object isKindOfClass:UIImage.class]) { segment.image = object; }
-    segment.isReversible = reversible;
-
-    // Re-layout the views
-    [self setNeedsLayout];
-}
-
 #pragma mark Deleting Items
-
-- (void)removeLastSegment {
-    [self removeSegmentAtIndex:self.items.count - 1];
-}
-
-- (void)removeSegmentAtIndex:(NSInteger)index {
-    if (index < 0 || index >= self.items.count) { return; }
-
-    // Remove from the item list
-    NSMutableArray *items = self.items.mutableCopy;
-    [items removeObjectAtIndex:index];
-    _items = items;
-
-    // Remove item object
-    [self.segments[index].containerView removeFromSuperview];
-    [self.segments removeObjectAtIndex:index];
-
-    // Update number of separators
-    [self updateSeparatorViewCount];
-}
 
 - (void)removeAllSegments {
     // Remove all item objects
@@ -396,66 +217,6 @@ static CGFloat const kTOSegmentedControlDirectionArrowMargin = 2.0f;
 
     // Delete the items array
     _items = nil;
-}
-
-#pragma mark Enabled/Disabled
-
-- (void)setEnabled:(BOOL)enabled forSegmentAtIndex:(NSInteger)index {
-    if (index < 0 || index >= self.segments.count) { return; }
-    self.segments[index].isDisabled = !enabled;
-    [self setNeedsLayout];
-
-    // If we disabled the selected index, choose another one
-    if (self.selectedSegmentIndex >= 0 && !self.segments[self.selectedSegmentIndex].isDisabled) {
-        return;
-    }
-
-    // Loop ahead of the selected segment index to find the next enabled one
-    for (NSInteger i = self.selectedSegmentIndex; i < self.segments.count; i++) {
-        if (self.segments[i].isDisabled) { continue; }
-        self.selectedSegmentIndex = i;
-        return;
-    }
-
-    // If that failed, loop forward to find an enabled one before it
-    for (NSInteger i = self.selectedSegmentIndex; i >= 0; i--) {
-        if (self.segments[i].isDisabled) { continue; }
-        self.selectedSegmentIndex = i;
-        return;
-    }
-
-    // Nothing is enabled, default back to deselecting everything
-    self.selectedSegmentIndex = -1;
-}
-
-- (BOOL)isEnabledForSegmentAtIndex:(NSInteger)index {
-    if (index < 0 || index >= self.segments.count) { return NO; }
-    return !self.segments[index].isDisabled;
-}
-
-#pragma mark - Reversible Management -
-
-// Accessors for setting when a segment is reversible.
-
-- (void)setReversible:(BOOL)reversible forSegmentAtIndex:(NSInteger)index {
-    if (index < 0 || index >= self.segments.count) { return; }
-    self.segments[index].isReversible = reversible;
-}
-
-- (BOOL)isReversibleForSegmentAtIndex:(NSInteger)index {
-    if (index < 0 || index >= self.segments.count) { return NO; }
-    return !self.segments[index].isReversible;
-}
-
-// Accessors for toggling whether a reversible segment is currently reversed.
-- (void)setReversed:(BOOL)reversed forSegmentAtIndex:(NSInteger)index {
-    if (index < 0 || index >= self.segments.count) { return; }
-    self.segments[index].isReversed = reversed;
-}
-
-- (BOOL)isReversedForSegmentAtIndex:(NSInteger)index {
-    if (index < 0 || index >= self.segments.count) { return NO; }
-    return !self.segments[index].isReversed;
 }
 
 #pragma mark - View Layout -
@@ -510,12 +271,6 @@ static CGFloat const kTOSegmentedControlDirectionArrowMargin = 2.0f;
         itemFrame.size.height = MIN(thumbFrame.size.height, itemFrame.size.height);
         itemFrame.size.width = MIN(thumbFrame.size.width, itemFrame.size.width);
 
-        // If the item is reversible, make sure there is also room to show the arrow
-        CGFloat arrowSpacing = (self.arrowImage.size.width + kTOSegmentedControlDirectionArrowMargin) * 2.0f;
-        if (item.isReversible && (itemFrame.size.width + arrowSpacing) > thumbFrame.size.width) {
-            itemFrame.size.width -= arrowSpacing;
-        }
-
         // Center the item in the container
         itemFrame.origin.x = (CGRectGetWidth(thumbFrame) - itemFrame.size.width) * 0.5f;
         itemFrame.origin.y = (CGRectGetHeight(thumbFrame) - itemFrame.size.height) * 0.5f;
@@ -548,13 +303,8 @@ static CGFloat const kTOSegmentedControlDirectionArrowMargin = 2.0f;
     NSInteger i = 0;
     for (UIView *separatorView in self.separatorViews) {
         CGRect frame = separatorView.frame;
-
-        //if (self.centerSeparatorBetweenSegments) {
-        //    frame.origin.x = ;
-        //} else {
-            segmentWidth = segmentWidth + [self widthOfSegmentAtIndex:i];
-            frame.origin.x = xOffset + segmentWidth;
-        //}
+        segmentWidth = segmentWidth + [self widthOfSegmentAtIndex:i];
+        frame.origin.x = xOffset + segmentWidth;
         frame.size.width = 1.0f;
         frame.size.height = (size.height - (self.cornerRadius) * 2.0f) + 2.0f;
         frame.origin.y = (size.height - frame.size.height) * 0.5f;
@@ -630,14 +380,6 @@ static CGFloat const kTOSegmentedControlDirectionArrowMargin = 2.0f;
     return CGRectIntegral(frame);
 }
 
-- (CGRect)frameForImageArrowViewWithItemFrame:(CGRect)itemFrame {
-    CGRect frame = CGRectZero;
-    frame.size = self.arrowImage.size;
-    frame.origin.x = CGRectGetMaxX(itemFrame) + kTOSegmentedControlDirectionArrowMargin;
-    frame.origin.y = ceilf(CGRectGetMidY(itemFrame) - (frame.size.height * 0.5f));
-    return frame;
-}
-
 - (NSInteger)segmentIndexForPoint:(CGPoint)point {
     if (!self.apportionsSegmentWidthsByContent) {
         CGFloat segmentWidth = floorf(self.frame.size.width / self.numberOfSegments);
@@ -659,77 +401,29 @@ static CGFloat const kTOSegmentedControlDirectionArrowMargin = 2.0f;
 
 - (void)setThumbViewShrunken:(BOOL)shrunken {
     CGFloat scale = shrunken ? kTOSegmentedControlSelectedScale : 1.0f;
-    self.thumbView.transform = CGAffineTransformScale(CGAffineTransformIdentity,
-                                                      scale, scale);
+    self.thumbView.transform = CGAffineTransformScale(CGAffineTransformIdentity, scale, scale);
 }
 
 - (void)setItemViewAtIndex:(NSInteger)segmentIndex shrunken:(BOOL)shrunken {
-    NSAssert(segmentIndex >= 0 && segmentIndex < self.items.count,
-             @"TOSegmentedControl: Array should not be out of bounds");
-
     TOSegmentedControlSegment *segment = self.segments[segmentIndex];
     UIView *itemView = segment.itemView;
-    CGRect itemFrame = itemView.frame;
-    CGPoint itemViewCenter = itemView.center;
 
     if (shrunken == NO) {
         itemView.transform = CGAffineTransformIdentity;
-    }
-    else {
+    } else {
         CGFloat scale = kTOSegmentedControlSelectedScale;
-        itemView.transform = CGAffineTransformScale(CGAffineTransformIdentity,
-                                                          scale, scale);
+        itemView.transform = CGAffineTransformScale(CGAffineTransformIdentity, scale, scale);
     }
-
-    // If we have a reversible image view, manipulate its transformation
-    // to match the position and scale of the item view
-    UIView *arrowView = segment.arrowView;
-    if (arrowView == nil) { return; }
-
-    if (!shrunken) {
-        arrowView.transform = CGAffineTransformIdentity;
-        return;
-    }
-
-    CGFloat scale = kTOSegmentedControlSelectedScale;
-    CGRect arrowFrame = [self frameForImageArrowViewWithItemFrame:itemFrame];
-
-    // Work out the delta between the middle of the item view,
-    // and the middle of the image view
-    CGPoint offset = CGPointZero;
-    offset.x = (CGRectGetMidX(arrowFrame) - itemViewCenter.x);
-
-    // Create a transformation matrix that applies the scale to the arrow,
-    // with the transformation origin being the middle of the item view
-    CGAffineTransform transform = arrowView.transform;
-    transform = CGAffineTransformTranslate(transform, -offset.x, -offset.y);
-    transform = CGAffineTransformScale(transform, scale, scale);
-    transform = CGAffineTransformTranslate(transform, offset.x, offset.y);
-    arrowView.transform = transform;
-}
-
-- (void)setItemViewAtIndex:(NSInteger)segmentIndex reversed:(BOOL)reversed {
-    NSAssert(segmentIndex >= 0 && segmentIndex < self.items.count,
-             @"TOSegmentedControl: Array should not be out of bounds");
-
-    TOSegmentedControlSegment *segment = self.segments[segmentIndex];
-    [segment setArrowImageReversed:reversed];
 }
 
 - (void)setItemAtIndex:(NSInteger)index selected:(BOOL)selected {
-    NSAssert(index >= 0 && index < self.segments.count,
-             @"TOSegmentedControl: Array should not be out of bounds");
-
     // Tell the segment to select itself in order to show the reversible arrow
     TOSegmentedControlSegment *segment = self.segments[index];
-
-    // Update the alpha of the reversible arrow
-    segment.arrowView.alpha = selected ? kTOSegmentedControlDirectionArrowAlpha : 0.0f;
 
     // The rest of this code deals with swapping the font
     // of the label. Cancel out if we're an image.
     UILabel *label = segment.label;
-    if (label == nil) { return; }
+    if (label == nil) return;
 
     // Set the font
     UIFont *font = selected ? self.selectedTextFont : self.textFont;
@@ -737,20 +431,9 @@ static CGFloat const kTOSegmentedControlDirectionArrowMargin = 2.0f;
 
     // Set the text color
     label.textColor = selected ? self.selectedItemColor : self.itemColor;
-
-    // Set the arrow tint color
-    segment.arrowView.tintColor = label.textColor;
-
-    // Re-apply the arrow image view to the translated frame
-    segment.arrowView.frame = [self frameForImageArrowViewWithItemFrame:label.frame];
-
-    // Ensure the arrow view is set to the right orientation
-    [segment setArrowImageReversed:segment.isReversed];
 }
 
 - (void)setItemAtIndex:(NSInteger)index faded:(BOOL)faded {
-    NSAssert(index >= 0 && index < self.segments.count,
-             @"Array should not be out of bounds");
     UIView *itemView = self.segments[index].itemView;
     itemView.alpha = faded ? kTOSegmentedControlSelectedTextAlpha : 1.0f;
 }
@@ -945,7 +628,7 @@ static CGFloat const kTOSegmentedControlDirectionArrowMargin = 2.0f;
 
 - (void)didEndTap:(UIControl *)control withEvent:(UIEvent *)event {
     // Exit out if the control is disabled
-    if (!self.enabled || self.hasNoSegments) { return; }
+    if (!self.enabled || self.hasNoSegments) return;
 
     // Capture the touch object in order to track its state
     UITouch *touch = event.allTouches.anyObject;
@@ -961,13 +644,12 @@ static CGFloat const kTOSegmentedControlDirectionArrowMargin = 2.0f;
 
     // If we WEREN'T dragging the thumb view, work out where we need to move to
     if (!self.isDraggingThumbView) {
-        if (segment.isDisabled) { return; }
+        if (segment.isDisabled) return;
 
         // If we weren't cancelled, animate to the new index
         if (!isCancelled) {
             [self setSelectedSegmentIndex:tappedIndex animated:YES];
-        }
-        else {
+        } else {
             // Else, reset the currently highlighted item
             [self didExitTapBounds:self withEvent:event];
         }
@@ -983,19 +665,11 @@ static CGFloat const kTOSegmentedControlDirectionArrowMargin = 2.0f;
         _selectedSegmentIndex = tappedIndex;
         [self sendIndexChangedEventActions];
     }
-    else if (segment.isReversible && !self.didDragOffOriginalSegment) {
-        // If the item was reversible, and we never changed segments,
-        // trigger the reverse alert delegate
-        [segment toggleDirection];
-        [self sendIndexChangedEventActions];
-    }
 
     // Work out which animation effects to apply
     id animationBlock = ^{
         [self setThumbViewShrunken:NO];
         [self setItemViewAtIndex:self.selectedSegmentIndex shrunken:NO];
-        [self setItemViewAtIndex:self.selectedSegmentIndex
-                        reversed:self.selectedSegmentReversed];
     };
 
     // Animate the transition
@@ -1014,12 +688,6 @@ static CGFloat const kTOSegmentedControlDirectionArrowMargin = 2.0f;
 - (void)sendIndexChangedEventActions {
     // Trigger the action event for any targets that were
     [self sendActionsForControlEvents:UIControlEventValueChanged];
-
-    // Trigger the block if it is set
-    if (self.segmentTappedHandler) {
-        self.segmentTappedHandler(self.selectedSegmentIndex,
-                                  self.selectedSegmentReversed);
-    }
 }
 
 #pragma mark - Accessors -
@@ -1028,7 +696,7 @@ static CGFloat const kTOSegmentedControlDirectionArrowMargin = 2.0f;
 // Selected Item Index
 
 - (void)setSelectedSegmentIndex:(NSInteger)selectedSegmentIndex animated:(BOOL)animated {
-    if (self.selectedSegmentIndex == selectedSegmentIndex) { return; }
+    if (self.selectedSegmentIndex == selectedSegmentIndex) return;
 
     // Set the new value
     _selectedSegmentIndex = selectedSegmentIndex;
@@ -1069,32 +737,13 @@ static CGFloat const kTOSegmentedControlDirectionArrowMargin = 2.0f;
     };
 
     // Commit the animation
-    [UIView animateWithDuration:0.45
+    [UIView animateWithDuration:0.45f
                           delay:0.0f
          usingSpringWithDamping:1.0f
           initialSpringVelocity:2.0f
                         options:UIViewAnimationOptionBeginFromCurrentState
                      animations:animationBlock
                      completion:nil];
-
-
-}
-
-// -----------------------------------------------
-// Selected Item Reversed
-
-- (void)setSelectedSegmentReversed:(BOOL)selectedSegmentReversed {
-    if (self.selectedSegmentIndex < 0) { return; }
-    TOSegmentedControlSegment *segment = self.segments[self.selectedSegmentIndex];
-    if (segment.isReversible == NO) { return; }
-    segment.isReversed = selectedSegmentReversed;
-}
-
-- (BOOL)selectedSegmentReversed {
-    if (self.selectedSegmentIndex < 0) { return NO; }
-    TOSegmentedControlSegment *segment = self.segments[self.selectedSegmentIndex];
-    if (segment.isReversible == NO) { return NO; }
-    return segment.isReversed;
 }
 
 // -----------------------------------------------
@@ -1131,32 +780,26 @@ static CGFloat const kTOSegmentedControlDirectionArrowMargin = 2.0f;
     self.thumbView.layer.cornerRadius = (self.cornerRadius - _thumbInset) + 1.0f;
 }
 
-- (CGFloat)cornerRadius { return self.trackView.layer.cornerRadius; }
+- (CGFloat)cornerRadius {
+    return self.trackView.layer.cornerRadius;
+}
 
 // -----------------------------------------------
 // Thumb Color
 
 - (void)setThumbColor:(UIColor *)thumbColor {
     self.thumbView.backgroundColor = thumbColor;
-    if (self.thumbView.backgroundColor != nil) { return; }
-
-    // On iOS 12 and below, simply set the thumb view to be white
-    self.thumbView.backgroundColor = [UIColor whiteColor];
 }
-- (UIColor *)thumbColor { return self.thumbView.backgroundColor; }
+
+- (UIColor *)thumbColor {
+    return self.thumbView.backgroundColor;
+}
 
 // -----------------------------------------------
 // Background Color
 
 - (void)setBackgroundColor:(UIColor *)backgroundColor {
     [super setBackgroundColor:[UIColor clearColor]];
-    _trackView.backgroundColor = backgroundColor;
-
-    // Exit out if we don't need to reset to defaults
-    if (_trackView.backgroundColor != nil) { return; }
-
-    // Set the default color for iOS 12 and below
-    backgroundColor = [UIColor colorWithRed:0.0f green:0.0f blue:0.08f alpha:0.06666f];
     _trackView.backgroundColor = backgroundColor;
 }
 
@@ -1169,13 +812,6 @@ static CGFloat const kTOSegmentedControlDirectionArrowMargin = 2.0f;
 
 - (void)setSeparatorColor:(UIColor *)separatorColor {
     _separatorColor = separatorColor;
-    if (_separatorColor == nil) {
-        // Set the default color for iOS 12 and below
-        separatorColor = [UIColor colorWithRed:0.0f green:0.0f blue:0.08f alpha:0.1f];
-
-        _separatorColor = separatorColor;
-    }
-
     for (UIView *separatorView in self.separatorViews) {
         separatorView.tintColor = _separatorColor;
     }
@@ -1186,10 +822,6 @@ static CGFloat const kTOSegmentedControlDirectionArrowMargin = 2.0f;
 
 - (void)setItemColor:(UIColor *)itemColor {
     _itemColor = itemColor;
-    if (_itemColor == nil) {
-        _itemColor = [UIColor blackColor];
-    }
-
     // Set each item to the color
     for (TOSegmentedControlSegment *item in self.segments) {
         [item refreshItemView];
@@ -1201,10 +833,6 @@ static CGFloat const kTOSegmentedControlDirectionArrowMargin = 2.0f;
 
 - (void)setSelectedItemColor:(UIColor *)selectedItemColor {
     _selectedItemColor = selectedItemColor;
-    if (_selectedItemColor == nil) {
-        _selectedItemColor = [UIColor blackColor];
-    }
-
     // Set each item to the color
     for (TOSegmentedControlSegment *item in self.segments) {
         [item refreshItemView];
@@ -1216,10 +844,6 @@ static CGFloat const kTOSegmentedControlDirectionArrowMargin = 2.0f;
 
 - (void)setTextFont:(UIFont *)textFont {
     _textFont = textFont;
-    if (_textFont == nil) {
-        _textFont = [UIFont systemFontOfSize:13.0f weight:UIFontWeightMedium];
-    }
-
     // Set each item to adopt the new font
     for (TOSegmentedControlSegment *item in self.segments) {
         [item refreshItemView];
@@ -1231,10 +855,6 @@ static CGFloat const kTOSegmentedControlDirectionArrowMargin = 2.0f;
 
 - (void)setSelectedTextFont:(UIFont *)selectedTextFont {
     _selectedTextFont = selectedTextFont;
-    if (_selectedTextFont == nil) {
-        _selectedTextFont = [UIFont systemFontOfSize:13.0f weight:UIFontWeightSemibold];
-    }
-
     // Set each item to adopt the new font
     for (TOSegmentedControlSegment *item in self.segments) {
         [item refreshItemView];
@@ -1283,63 +903,15 @@ static CGFloat const kTOSegmentedControlDirectionArrowMargin = 2.0f;
     return self.segments.count;
 }
 
-// -----------------------------------------------
-// Setting all reversible indexes
-- (void)setReversibleSegmentIndexes:(NSArray<NSNumber *> *)reversibleSegmentIndexes {
-    for (NSInteger i = 0; i < self.numberOfSegments; i++) {
-        BOOL reversible = [reversibleSegmentIndexes indexOfObject:@(i)] != NSNotFound;
-        [self setReversible:reversible forSegmentAtIndex:i];
-    }
+- (BOOL)hasNoSegments {
+    return self.segments.count <= 0;
 }
-
-- (NSArray<NSNumber *> *)reversibleSegmentIndexes {
-    NSMutableArray *array = [NSMutableArray array];
-    for (NSInteger i = 0; i < self.numberOfSegments; i++) {
-        if ([self isReversibleForSegmentAtIndex:i]) {
-            [array addObject:@(i)];
-        }
-    }
-
-    return [NSArray arrayWithArray:array];
-}
-
-- (BOOL)hasNoSegments { return self.segments.count <= 0; }
 
 #pragma mark - Image Creation and Management -
 
-- (UIImage *)arrowImage {
-    // Retrieve from the image table
-    UIImage *arrowImage = [self.imageTable objectForKey:kTOSegmentedControlArrowImage];
-    if (arrowImage != nil) { return arrowImage; }
-
-    // Generate for the first time
-    UIGraphicsBeginImageContextWithOptions((CGSize){8.0f, 4.0f}, NO, 0.0f);
-    {
-        UIBezierPath* bezierPath = [UIBezierPath bezierPath];
-        [bezierPath moveToPoint: CGPointMake(7.25, 0.75)];
-        [bezierPath addLineToPoint: CGPointMake(4, 3.25)];
-        [bezierPath addLineToPoint: CGPointMake(0.75, 0.75)];
-        [UIColor.blackColor setStroke];
-        bezierPath.lineWidth = 1.5;
-        bezierPath.lineCapStyle = kCGLineCapRound;
-        bezierPath.lineJoinStyle = kCGLineJoinRound;
-        [bezierPath stroke];
-        arrowImage = UIGraphicsGetImageFromCurrentImageContext();
-    }
-    UIGraphicsEndImageContext();
-
-    // Force to always be template
-    arrowImage = [arrowImage imageWithRenderingMode:UIImageRenderingModeAlwaysTemplate];
-
-    // Save to the map table for next time
-    [self.imageTable setObject:arrowImage forKey:kTOSegmentedControlArrowImage];
-
-    return arrowImage;
-}
-
 - (UIImage *)separatorImage {
     UIImage *separatorImage = [self.imageTable objectForKey:kTOSegmentedControlSeparatorImage];
-    if (separatorImage != nil) { return separatorImage; }
+    if (separatorImage != nil) return separatorImage;
 
     UIGraphicsBeginImageContextWithOptions((CGSize){1.0f, 3.0f}, NO, 0.0f);
     {
@@ -1351,8 +923,7 @@ static CGFloat const kTOSegmentedControlDirectionArrowMargin = 2.0f;
     UIGraphicsEndImageContext();
 
     // Format image to be resizable and tint-able.
-    separatorImage = [separatorImage resizableImageWithCapInsets:(UIEdgeInsets){1.0f, 0.0f, 1.0f, 0.0f}
-                                                    resizingMode:UIImageResizingModeTile];
+    separatorImage = [separatorImage resizableImageWithCapInsets:(UIEdgeInsets){1.0f, 0.0f, 1.0f, 0.0f} resizingMode:UIImageResizingModeTile];
     separatorImage = [separatorImage imageWithRenderingMode:UIImageRenderingModeAlwaysTemplate];
 
     return separatorImage;
