@@ -34,10 +34,6 @@ BOOL kEnableSkipCountTracking;
 CGFloat kSkipNoticeDuration;
 NSMutableArray <NSString *> *kWhitelistedChannels;
 
-@interface UINavigationBar (iSB)
-@property (setter=_setBackgroundView:,nonatomic,retain) UIView * _backgroundView; 
-@end
-
 @interface YTPlayerViewController (iSB)
 @property (strong, nonatomic) NSMutableArray <SponsorSegment *> *skipSegments;
 @property (nonatomic, assign) NSInteger currentSponsorSegment;
